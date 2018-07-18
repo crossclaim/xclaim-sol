@@ -31,14 +31,9 @@ contract ERCXXXInterface {
     uint public graceRedeemPeriod;
 
     /**
-   * List of trusted relayers / relayer contracts.
-   */
-    mapping(address => uint) issuers;
-
-    /**
-    * List of trusted SGX relayers / relayer contracts.
+    * List of trusted issuers
     */
-    mapping(address => uint) relayers;
+    mapping(address => uint) issuers;
 
     /**
     * List of user balances.
@@ -110,7 +105,7 @@ contract ERCXXXInterface {
     *
     * ASSERT: msg.sender in relayer list, abort otherwise.
     */
-    function issue(address receiver, uint id, bytes data);
+    function issue(address receiver, bytes data);
 
     /**
     * Transfers ownership of tokens to another user. Allows to potentially lock the funds with another issuer.
@@ -127,7 +122,7 @@ contract ERCXXXInterface {
     * -) does this tx actually spend from the first 'lock' tx correctly. Will require call to relay.
     * -) is the transferred amount high enough to cover native tx fees. Will require call to relay.
     */
-    function transfer(address sender, address receiver, uint id, bytes data);
+    function transfer(address sender, address receiver, bytes data);
 
     /**
     * Initiates the redeeming of backed-tokens in the native cryptocurrency. Redeemed tokens are 'burned' in the process.
@@ -140,24 +135,7 @@ contract ERCXXXInterface {
     *
     * TODO: optional: add checks - is the first 'lock' TX still unspent and does this tx actually spend from the first 'lock' tx correctly. Will require call to relay.
     */
-    function redeem(address redeemer, uint id, bytes data);
-
-    /**
-    * Accuses the issuer of not releasing the locked funds to the redeemer, despite the corresponding tokens having
-    * been burned.
-    * @redeemer - redeemer address
-    * @id - id of the token struct which was supposed to be redeemed (issue of dispute)
-    *
-    * ASSERT: user has provided sufficient collateral.
-    */
-    function accuse(address redeemer, uint id);
-
-    /**
-    * Issuer (or any user on behalf of the issuer)
-    *
-    *
-    */
-    function rebut(uint id, byte data);
+    function redeem(address redeemer,  bytes data);
 
 
     // #####################
