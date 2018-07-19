@@ -1,6 +1,6 @@
 pragma solidity ^0.4.11;
 
-contract ERCXXXInterface {
+contract ERCXXX_SGXRelay_Interface {
 
     // #####################
     // CONTRACT VARIABLES

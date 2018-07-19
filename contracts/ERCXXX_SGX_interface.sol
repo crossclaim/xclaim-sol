@@ -1,92 +1,17 @@
 pragma solidity ^0.4.11;
+import "./ERCXXX_Interface.sol";
 
-contract ERCXXXInterface {
+contract ERCXXX_SGX_Interface is ERCXXX_Interface{
 
     // #####################
     // CONTRACT VARIABLES
     // #####################
 
-    /**
-    * Denotes the maximum supply of the backing cryptocurrency.
-    */
-    uint public maxSupply;
-
-    /**
-    * Total supply that can be issued by this contract.
-    * Of only once instance is to be used, set contractSupply = maxSupply
-    */
-    uint public contractSupply;
-
-    /**
-    * Duration of the contest period - contract will only consider transactions with sufficient confirmations as
-    * valid.
-    * Optional: add minimum seconds duration as fallback (threat: timestamp tampering)
-    */
-    uint public contestationPeriod;
-
-    /**
-    * Duration of the grace period, until which the Issuer must have sent the burned tokens to the redeemer d
-    * Measured in Ethereum blocks. Optional: add maximum seconds duration as fallback (threat: timestamp tampering)
-    */
-    uint public graceRedeemPeriod;
 
     /**
     * List of trusted issuers
     */
     mapping(address => uint) issuers;
-
-    /**
-    * List of user balances.
-    */
-    mapping(address => uint) balances;
-
-    /**
-    * Struct containing information on a redeem request
-    */
-    struct RedeemRequest{
-        address redeemer;
-        uint value;
-        uint redeemTime;
-    }
-
-    /**
-    * List of pending redeem requests
-    */
-    mapping(uint => RedeemRequest) redeemRequests;
-
-    /**
-    * List of accusations of failed redeems
-    */
-    mapping(uint => uint) accusations;
-
-    /**
-    * Alternative UTXO approach
-    *
-    * Mapping of user address to token UTXO.
-    * A UTXO has the following (imaginary JSON) format:
-    * address : {
-    *   "ID": uint : {
-    *       "value": uint,
-    *       "status": string/enum,
-    *       "createdOn": uint,
-    *       "redeemedOn": uint
-    *   },
-    *   ...
-    * }
-    *
-    *
-    mapping(address => uint) balances;
-    // TODO: can we combine the following properties into a single list of objects efficiently, without running risk of OUT-OF-GAS?
-    // Mapping utxoID - value
-    mapping(uint => uint) values;
-    // Mapping utxoID - token state (ISSUED, TRADEABLE, REDEEMED)
-    mapping(uint => uint) states;
-    // Mapping utxoID - token creation date
-    mapping(uint => uint) createdOn;
-    // Mappint utxoID - token redeem date
-    mapping(uint => uint) redeemedOn;
-    */
-
 
     // #####################
     // MODIFIERS
