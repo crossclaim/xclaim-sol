@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.24;
 
 import "./ERCXXX_Interface.sol";
 import "./ERCXXX_Tribunal_Interface.sol";

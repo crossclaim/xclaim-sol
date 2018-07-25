@@ -1,10 +1,10 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.24;
 import "./ERCXXX_Interface.sol";
 
 /**
 * ERCXXX using SGX issuers Interface
 */
-contract ERCXXX_SGX_Interface is ERCXXX_Interface{
+contract ERCXXX_SGX_Interface is ERCXXX_Interface {
 
     // #####################
     // CONTRACT VARIABLES
