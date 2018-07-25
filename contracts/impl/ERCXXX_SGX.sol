@@ -28,6 +28,7 @@ contract ERCXXX_SGX_BaseToken is ERCXXX_Base_Interace {
 
     mapping(address => uint) internal balances;
 
+    address[] internal issuerList;
     mapping(address => bool) internal issuers;
 
     struct RedeemRequest{
@@ -77,38 +78,29 @@ contract ERCXXX_SGX_BaseToken is ERCXXX_Base_Interace {
         return balances[_owner];
     }
 
-    function granularity() public view returns (uint256);
-
-    function pendingRedeemRequests() public view returns(uint256[]);
+    function granularity() public view returns (uint256) {
+        return granularity;
+    }
 
     // #####################
     // FUNCTIONS
     // #####################
 
-    function listIssuers() public view returns(address[]);
+    function pendingRedeemRequests() public view returns(uint256[]) {
+        return redeemRequestList;
+    }
 
-    function authorizeIssuer(address toRegister, bytes data) public;
+    function listIssuers() public view returns(address[]) {
+        return issuerList;
+    }
 
-    function revokeIssuer(address toUnlist, bytes data) public;
+    function authorizeIssuer(address _toRegister, bytes _data) public;
 
-    function issue(address receiver, bytes data) public;
+    function revokeIssuer(address _toUnlist, bytes _data) public;
 
-    function transfer(address sender, address receiver, bytes data) public;
+    function issue(address _sender, address _receiver, bytes _data) public;
 
-    function redeem(address redeemer,  bytes data) public;
+    function transfer(address _sender, address _receiver, bytes _data) public;
 
-    // #####################
-    // EVENTS
-    // #####################
-
-    event AuthroizedIssuer(address indexed issuer, uint collateral, bytes data);
-
-    event RevokedIssuer(address indexed issuer, uint collateral, bytes data);
-
-    event Issue(address indexed issuer, address indexed receiver, uint value, bytes data);
-
-    event Transfer(address indexed sender, address indexed receiver, uint value, bytes data);
-
-    event Redeem(address indexed redeemer, address indexed issuer, uint value, bytes data);
-
+    function redeem(address _redeemer,  bytes _data) public;
 }
