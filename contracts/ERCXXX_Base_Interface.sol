@@ -81,6 +81,8 @@ contract ERCXXX_Base_Interface {
 
     function granularity() public view returns (uint256);
 
+    function pendingRedeemRequests() public view returns(uint256[]);
+
 
     // #####################
     // FUNCTIONS
@@ -184,6 +186,6 @@ contract ERCXXX_Base_Interface {
     * @value - number of tokens to be redeemed (and hence burned)
     * @data - data, contains 'redeem' transaction (to be signed by the issuer)
     */
-    event REDEEM(address indexed redeemer, address indexed issuer, uint value, bytes data);
+    event Redeem(address indexed redeemer, address indexed issuer, uint value, bytes data);
 
 }
