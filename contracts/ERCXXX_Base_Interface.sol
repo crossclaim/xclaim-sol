@@ -12,45 +12,45 @@ contract ERCXXX_Base_Interface {
     /**
     * Denotes the maximum supply of the backing cryptocurrency.
     */
-    uint public maxSupply;
+    // uint public maxSupply;
 
     /**
     * Total supply that can be issued by this contract.
     * Of only once instance is to be used, set contractSupply = maxSupply
     */
-    uint public contractSupply;
+    // uint public contractSupply;
 
     /**
     * Duration of the contest period - contract will only consider transactions with sufficient confirmations as
     * valid.
     * Optional: add minimum seconds duration as fallback (threat: timestamp tampering)
     */
-    uint public contestationPeriod;
+    // uint public contestationPeriod;
 
     /**
     * Duration of the grace period, until which the Issuer must have sent the burned tokens to the redeemer d
     * Measured in Ethereum blocks. Optional: add maximum seconds duration as fallback (threat: timestamp tampering)
     */
-    uint public graceRedeemPeriod;
+    // uint public graceRedeemPeriod;
 
     /**
     * List of user balances.
     */
-    mapping(address => uint) balances;
+    // mapping(address => uint) balances;
 
     /**
     * Struct containing information on a redeem request
     */
-    struct RedeemRequest{
-        address redeemer;
-        uint value;
-        uint redeemTime;
-    }
+    // struct RedeemRequest{
+    //    address redeemer;
+    //    uint value;
+    //    uint redeemTime;
+    // }
 
     /**
     * List of pending redeem requests
     */
-    mapping(uint => RedeemRequest) redeemRequests;
+    // mapping(uint => RedeemRequest) redeemRequests;
 
 
     // #####################
@@ -58,6 +58,29 @@ contract ERCXXX_Base_Interface {
     // #####################
 
     // TODO: add modifiers for "ASSERTs" here
+
+    // #####################
+    // HELPER FUNCTIONS
+    // #####################
+
+    function name() public view returns (string);
+
+    function symbol() public view returns (string);
+
+    function totalSupply() public view returns (uint256);
+
+    function balanceOf(address owner) public view returns (uint);
+
+    // Get the smallest part of the token that’s not divisible.
+    // The following rules MUST be applied with respect to the granularity:
+    // The granularity value MUST NOT be changed.
+    // The granularity value MUST be greater or equal to 1.
+    // Any minting, send or burning of tokens MUST be a multiple of the granularity value.
+    // Any operation that would result in a balance that’s not a multiple of the granularity value, MUST be considered invalid and the transaction MUST throw.
+    // NOTE: Most of the tokens SHOULD be fully partitionable, i.e. this function SHOULD return 1 unless there is a good reason for not allowing any partition of the token.
+
+    function granularity() public view returns (uint256);
+
 
     // #####################
     // FUNCTIONS
@@ -72,9 +95,13 @@ contract ERCXXX_Base_Interface {
    * ASSERT: sufficient collateral provided
    *
    * CAUTION: may have to be set to private in SGX version, if no modification to issuers is wanted
+   * Private won't work - private in Solidity is in the sense of: only the contract can call, not private to specific parties.
    */
-    function registerIssuer(address toRegister, byte data);
-    function unlistIssuer(address toUnlist, byte data);
+    function listIssuers() public view returns(address[]);
+
+    function authorizeIssuer(address toRegister, bytes data) public;
+
+    function revokeIssuer(address toUnlist, bytes data) public;
 
     /**
     * Issues new units of cryptocurrency-backed token.
@@ -85,7 +112,7 @@ contract ERCXXX_Base_Interface {
     *
     * ASSERT: msg.sender in relayer list, abort otherwise.
     */
-    function issue(address receiver, bytes data);
+    function issue(address receiver, bytes data) public;
 
     /**
     * Transfers ownership of tokens to another user. Allows to potentially lock the funds with another issuer.
@@ -102,7 +129,9 @@ contract ERCXXX_Base_Interface {
     * -) does this tx actually spend from the first 'lock' tx correctly. Will require call to relay.
     * -) is the transferred amount high enough to cover native tx fees. Will require call to relay.
     */
-    function transfer(address sender, address receiver, bytes data);
+    function transfer(address sender, address receiver, bytes data) public;
+
+
 
     /**
     * Initiates the redeeming of backed-tokens in the native cryptocurrency. Redeemed tokens are 'burned' in the process.
@@ -115,19 +144,7 @@ contract ERCXXX_Base_Interface {
     *
     * TODO: optional: add checks - is the first 'lock' TX still unspent and does this tx actually spend from the first 'lock' tx correctly. Will require call to relay.
     */
-    function redeem(address redeemer,  bytes data);
-
-
-    // #####################
-    // HELPER FUNCTIONS
-    // #####################
-
-    /**
-    * Returns the balance of user associated with the provided address
-    * @who - inquired address
-    */
-    function balanceOf(address who) constant returns (uint);
-
+    function redeem(address redeemer,  bytes data) public;
 
     // #####################
     // EVENTS
@@ -139,8 +156,8 @@ contract ERCXXX_Base_Interface {
    * @value - provided collateral
    * @data - data, contains evtl. necessary data (e.g., lock transaction for native currency collateral)
    */
-    event REGISTER_ISSUER(address indexed issuer, uint collateral, bytes data);
-    event UNLIST_ISSUER(address indexed issuer, uint collateral, bytes data);
+    event AuthroizedIssuer(address indexed issuer, uint collateral, bytes data);
+    event RevokedIssuer(address indexed issuer, uint collateral, bytes data);
 
     /**
     * Issue event:
@@ -149,7 +166,7 @@ contract ERCXXX_Base_Interface {
     * @value - number of issuer tokens
     * @data - data, contains 'lock' transaction
     */
-    event ISSUE(address indexed issuer, address indexed receiver, uint value, bytes data);
+    event Issue(address indexed issuer, address indexed receiver, uint value, bytes data);
 
     /**
     * Transfer event:
@@ -158,7 +175,7 @@ contract ERCXXX_Base_Interface {
     * @value - transferred value
     * @data - data, contains new 'lock' transaction
     */
-    event TRANSFER(address indexed sender, address indexed receiver, uint value, bytes data);
+    event Transfer(address indexed sender, address indexed receiver, uint value, bytes data);
 
     /**
     * Redeem event:
