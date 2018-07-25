@@ -13,7 +13,7 @@ contract ERCXXX_SGX_Interface is ERCXXX_Interface {
     /**
     * List of trusted SGX issuers
     */
-    mapping(address => uint) issuers;
+    // mapping(address => uint) issuers;
 
 
     // #####################
