@@ -114,7 +114,7 @@ contract ERCXXX_Base_Interface {
     *
     * ASSERT: msg.sender in relayer list, abort otherwise.
     */
-    function issue(address receiver, bytes data) public;
+    function issue(address sender, address receiver, bytes data) public;
 
     /**
     * Transfers ownership of tokens to another user. Allows to potentially lock the funds with another issuer.
