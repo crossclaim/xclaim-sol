@@ -1,6 +1,9 @@
 pragma solidity ^0.4.11;
 
-contract ERCXXX_Interface {
+/**
+* Base ERCXXX Interface
+*/
+contract ERCXXX_Base_Interface {
 
     // #####################
     // CONTRACT VARIABLES
@@ -54,9 +57,24 @@ contract ERCXXX_Interface {
     // MODIFIERS
     // #####################
 
+    // TODO: add modifiers for "ASSERTs" here
+
     // #####################
     // FUNCTIONS
     // #####################
+
+    /**
+   * Registers / unlists a new issuer
+   * @toRegister - address to be registered/unlisted
+   * @data - [OPTIONAL] data, contains issuers address in the backed cryptocurrency and
+   *         any other necessary info for validating the issuer
+   *
+   * ASSERT: sufficient collateral provided
+   *
+   * CAUTION: may have to be set to private in SGX version, if no modification to issuers is wanted
+   */
+    function registerIssuer(address toRegister, byte data);
+    function unlistIssuer(address toUnlist, byte data);
 
     /**
     * Issues new units of cryptocurrency-backed token.
@@ -116,13 +134,22 @@ contract ERCXXX_Interface {
     // #####################
 
     /**
+   * Register Issue revent:
+   * @issuer - ETH address of the newly registered/unlisted issuer
+   * @value - provided collateral
+   * @data - data, contains evtl. necessary data (e.g., lock transaction for native currency collateral)
+   */
+    event REGISTER_ISSUER(address indexed issuer, uint collateral, bytes data);
+    event UNLIST_ISSUER(address indexed issuer, uint collateral, bytes data);
+
+    /**
     * Issue event:
     * @issuer - ETH address of the issuer
     * @receiver - ETH address of the receiver, as provided in the 'lock' transaction in the native native currency
     * @value - number of issuer tokens
     * @data - data, contains 'lock' transaction
     */
-    event Issue(address indexed issuer, address indexed receiver, uint value, bytes data);
+    event ISSUE(address indexed issuer, address indexed receiver, uint value, bytes data);
 
     /**
     * Transfer event:
@@ -131,7 +158,7 @@ contract ERCXXX_Interface {
     * @value - transferred value
     * @data - data, contains new 'lock' transaction
     */
-    event Transfer(address indexed sender, address indexed receiver, uint value, bytes data);
+    event TRANSFER(address indexed sender, address indexed receiver, uint value, bytes data);
 
     /**
     * Redeem event:
@@ -140,6 +167,6 @@ contract ERCXXX_Interface {
     * @value - number of tokens to be redeemed (and hence burned)
     * @data - data, contains 'redeem' transaction (to be signed by the issuer)
     */
-    event Redeem(address indexed redeemer, address indexed issuer, uint value, bytes data);
+    event REDEEM(address indexed redeemer, address indexed issuer, uint value, bytes data);
 
 }

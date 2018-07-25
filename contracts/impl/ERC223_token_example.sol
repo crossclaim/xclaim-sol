@@ -6,9 +6,9 @@ import "..\..\SafeMath.sol";
 
 
 /**
- * @title Reference implementation of the ERCXXX standard token.
+ * TODO: still OLD CODE FROM ERC223!!!! ONLY USE AS EXAPLE
  */
-contract BTC_ERCXXXToken is ERCXXXInterface {
+contract ERC223_token_example {// is ERC223_Intervace {
     using SafeMath for uint;
 
     mapping(address => uint) balances; // List of user balances.
