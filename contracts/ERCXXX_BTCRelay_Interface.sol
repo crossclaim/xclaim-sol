@@ -6,7 +6,7 @@ import "./ERCXXX_Tribunal_Interface.sol";
 /**
 * ERCXXX using BTCRelay Interface
 */
-contract ERCXXX_BTCRelay_Interface is ERCXXX_Interface, ERCXXX_Tribunal_Interface{
+contract ERCXXX_BTCRelay_Interface is ERCXXX_Interface, ERCXXX_Tribunal_Interface {
 
     // #####################
     // CONTRACT VARIABLES

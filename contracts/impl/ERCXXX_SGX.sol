@@ -3,11 +3,12 @@ pragma solidity ^0.4.24;
 /// @title ERCXXX ReferenceToken Contract
 /// @author Dominik Harz
 /// @dev This token contract's goal is to give an example implementation
-///  of ERCXXX with ERC223 compatible.
+///  of ERCXXX with ERC223 compatibility.
 ///  This contract does not define any standard, but can be taken as a reference
 ///  implementation in case of any ambiguity into the standard
 
-import { SafeMath } from "openzeppelin-solidity/contracts/math/SafeMath.sol";
+//import { SafeMath } from "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "../../SafeMath.sol";
 import { ERCXXX_Base_Interface} from "../ERCXXX_Base_Interface.sol";
 
 

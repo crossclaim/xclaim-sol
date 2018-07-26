@@ -1,8 +1,8 @@
 pragma solidity ^0.4.11;
 
-import './ERCXXX_interface.sol';
+import "../ERCXXX_Interface.sol";
 import './ERCXXX_receiving_contract.sol';
-import "..\..\SafeMath.sol";
+import "../../SafeMath.sol";
 
 
 /**
@@ -12,7 +12,7 @@ contract ERC223_token_example {// is ERC223_Intervace {
     using SafeMath for uint;
 
     mapping(address => uint) balances; // List of user balances.
-    
+
     /**
      * @dev Transfer the specified amount of tokens to the specified address.
      *      Invokes the `tokenFallback` function if the recipient is a contract.
