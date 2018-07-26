@@ -41,6 +41,9 @@ contract ERCXXX_SGX_BaseToken is ERCXXX_Base_Interace {
     uint256[] internal redeemRequestList;
     mapping(uint => RedeemRequest) internal redeemRequestMapping;
 
+    /* Event emitted when a transfer is done */
+    event Transfer(address indexed from, address indexed to, uint256 amount);
+
     // #####################
     // CONSTRUCTOR
     // #####################
@@ -101,7 +104,15 @@ contract ERCXXX_SGX_BaseToken is ERCXXX_Base_Interace {
 
     function issue(address _sender, address _receiver, bytes _data) public;
 
-    function transfer(address _sender, address _receiver, bytes _data) public;
+    /* Transfer of some amount of tokens from _sender to _receiver.
+       We can remove the _data bytes or interpret it as the _amount directly */
+    function transfer(address _sender, address _receiver, uint _amount, bytes _data) public {
+      require(balances[_sender] >= _amount);
+      require(_receiver != address(0));
+      balances[_sender] = balances[_sender] - _amount;
+      balances[_receiver] = balances[_receiver] + _amount;
+      emit Transfer(_sender, _receiver, _amount);
+    }
 
     function redeem(address _redeemer,  bytes _data) public;
 }
