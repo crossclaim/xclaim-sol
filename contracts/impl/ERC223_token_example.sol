@@ -13,6 +13,9 @@ contract ERC223_token_example {// is ERC223_Intervace {
 
     mapping(address => uint) balances; // List of user balances.
 
+    /* Event emitted when a transfer is done */
+    event Transfer(address indexed from, address indexed to, uint256 amount, bytes data);
+
     /**
      * @dev Transfer the specified amount of tokens to the specified address.
      *      Invokes the `tokenFallback` function if the recipient is a contract.
