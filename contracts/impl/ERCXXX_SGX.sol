@@ -6,31 +6,29 @@ pragma solidity ^0.4.24;
 ///  of ERCXXX with ERC223 compatibility.
 ///  This contract does not define any standard, but can be taken as a reference
 ///  implementation in case of any ambiguity into the standard
-
-//import { SafeMath } from "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "../../SafeMath.sol";
-import { ERCXXX_Base_Interface} from "../ERCXXX_Base_Interface.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "../ERCXXX_Base_Interface.sol";
 
 
-contract ERCXXX_SGX_BaseToken is ERCXXX_Base_Interace {
+contract ERCXXX_SGX_BaseToken is ERCXXX_Base_Interface {
     using SafeMath for uint256;
 
     // #####################
     // CONTRACT VARIABLES
     // #####################
 
-    string internal name;
-    string internal symbol;
-    uint256 internal granularity;
-    uint256 internal totalSupply;
+    string public name;
+    string public symbol;
+    uint256 public granularity;
+    uint256 public totalSupply;
 
     uint public contestationPeriod;
     uint public graceRedeemPeriod;
 
-    mapping(address => uint) internal balances;
+    mapping(address => uint) public balances;
 
     address[] internal issuerList;
-    mapping(address => bool) internal issuers;
+    mapping(address => bool) public issuers;
 
     struct RedeemRequest{
         address redeemer;
@@ -38,11 +36,12 @@ contract ERCXXX_SGX_BaseToken is ERCXXX_Base_Interace {
         uint redeemTime;
     }
 
-    uint256[] internal redeemRequestList;
-    mapping(uint => RedeemRequest) internal redeemRequestMapping;
+    uint256[] public redeemRequestList;
+    mapping(uint => RedeemRequest) public redeemRequestMapping;
 
+    // All events are defined in the interface contract - no need to double it here
     /* Event emitted when a transfer is done */
-    event Transfer(address indexed from, address indexed to, uint256 amount);
+    // event Transfer(address indexed from, address indexed to, uint256 amount);
 
     // #####################
     // CONSTRUCTOR
@@ -54,8 +53,6 @@ contract ERCXXX_SGX_BaseToken is ERCXXX_Base_Interace {
         symbol = _symbol;
         granularity = _granularity;
         totalSupply = 0;
-
-        setInterfaceImplementation("ERCXXX_Base_Interace", this);
     }
 
     // #####################
@@ -107,11 +104,11 @@ contract ERCXXX_SGX_BaseToken is ERCXXX_Base_Interace {
     /* Transfer of some amount of tokens from _sender to _receiver.
        We can remove the _data bytes or interpret it as the _amount directly */
     function transfer(address _sender, address _receiver, uint _amount, bytes _data) public {
-      require(balances[_sender] >= _amount);
-      require(_receiver != address(0));
-      balances[_sender] = balances[_sender] - _amount;
-      balances[_receiver] = balances[_receiver] + _amount;
-      emit Transfer(_sender, _receiver, _amount);
+        require(balances[_sender] >= _amount);
+        require(_receiver != address(0));
+        balances[_sender] = balances[_sender] - _amount;
+        balances[_receiver] = balances[_receiver] + _amount;
+        emit Transfer(_sender, _receiver, _amount, _data);
     }
 
     function redeem(address _redeemer,  bytes _data) public;
