@@ -27,7 +27,7 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
 
     mapping(address => uint) public balances;
 
-    address[] internal issuerList;
+    address[] public issuerList;
     mapping(address => bool) public issuers;
 
     struct RedeemRequest{
@@ -46,7 +46,7 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
     // #####################
     // CONSTRUCTOR
     // #####################
-    constructor(string _name, string _symbol, uint256 _granularity) internal {
+    constructor(string _name, string _symbol, uint256 _granularity) public {
         require(_granularity >= 1);
 
         name = _name;
@@ -91,15 +91,22 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         return redeemRequestList;
     }
 
-    function listIssuers() public view returns(address[]) {
+    function issuerList() public view returns(address[]) {
         return issuerList;
     }
 
-    function authorizeIssuer(address _toRegister, bytes _data) public;
+    function authorizeIssuer(address _toRegister, bytes _data) public {
+        issuers[_toRegister] = true;
+        issuerList.push(_toRegister);
+    }
 
-    function revokeIssuer(address _toUnlist, bytes _data) public;
+    function revokeIssuer(address _toUnlist, bytes _data) public {
+        issuers[_toUnlist] = false;
+    }
 
-    function issue(address _sender, address _receiver, bytes _data) public;
+    function issue(address _sender, address _receiver, bytes _data) public {
+        balances[_receiver] += 1;
+    }
 
     /* Transfer of some amount of tokens from _sender to _receiver.
        We can remove the _data bytes or interpret it as the _amount directly */
@@ -111,5 +118,7 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         emit Transfer(_sender, _receiver, _amount, _data);
     }
 
-    function redeem(address _redeemer,  bytes _data) public;
+    function redeem(address _redeemer, bytes _data) public {
+        balances[_redeemer] -= 1;
+    }
 }
