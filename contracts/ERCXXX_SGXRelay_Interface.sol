@@ -16,7 +16,7 @@ contract ERCXXX_SGXRelay_Interface is ERCXXX_Interface, ERCXXX_Tribunal_Interfac
     /**
     * List of trusted SGX relayers
     */
-    mapping(address => uint) relayers;
+    // mapping(address => uint) relayers;
 
 
     // #####################
@@ -30,19 +30,19 @@ contract ERCXXX_SGXRelay_Interface is ERCXXX_Interface, ERCXXX_Tribunal_Interfac
 
     /**
     * Registers / unlists a new relayer
-    * @toRegister - address to be registered/unlisted
-    * @data - [OPTIONAL] data, contains any necessary data for validating the relayer
+    * @param toRegister - address to be registered/unlisted
+    * @param data - [OPTIONAL] data, contains any necessary data for validating the relayer
     *
     * ASSERT: sufficient collateral provided
     */
-    function registerRelayer(address toRegister, byte data);
-    function unlistRelayer(address toUnlist, byte data);
+    function registerRelayer(address toRegister, bytes data);
+    function unlistRelayer(address toUnlist, bytes data);
 
     /**
    * Register/Unlist Relayer revent:
-   * @relayer - ETH address of the newly registered/unlisted relayer
-   * @value - provided collateral
-   * @data - data, contains evtl. necessary data (e.g., lock transaction for native currency collateral)
+   * @param relayer - ETH address of the newly registered/unlisted relayer
+   * @param collateral - provided collateral
+   * @param data - data, contains evtl. necessary data (e.g., lock transaction for native currency collateral)
    */
     event REGISTER_RELAYER(address indexed relayer, uint collateral, bytes data);
     event UNLIST_RELAYER(address indexed relayer, uint collateral, bytes data);

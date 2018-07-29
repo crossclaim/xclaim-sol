@@ -28,14 +28,14 @@ contract ERCXXX_BTCRelay_Interface is ERCXXX_Interface, ERCXXX_Tribunal_Interfac
 
     /**
      * Replaces existing relay contract
-     * @newRelay - address of new relay
-     * @data - [OPTIONAL] data
+     * @param newRelay - address of new relay
+     * @param data - [OPTIONAL] data
      *
      * ASSERT: only callable by contract owner / maintainer
      *
      * CAUTION: evaluate advantages vs risks of this functionality
      */
-    function replaceRelay(address newRelay, byte data);
+    function replaceRelay(address newRelay, bytes data);
 
     // #####################
     // HELPER FUNCTIONS
@@ -47,9 +47,9 @@ contract ERCXXX_BTCRelay_Interface is ERCXXX_Interface, ERCXXX_Tribunal_Interfac
 
     /**
    * Replace Relay revent:
-   * @oldRelay - ETH address of the replaced relay
-   * @newRelay - ETH address of the new relay
-   * @data - data, contains evtl. necessary data
+   * @param oldRelay - ETH address of the replaced relay
+   * @param newRelay - ETH address of the new relay
+   * @param data - data, contains evtl. necessary data
    */
     event REPLACE_RELAY(address indexed oldRelay, address newRelay, bytes data);
 
