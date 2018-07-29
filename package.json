@@ -1,0 +1,15 @@
+{
+  "name": "btc-erc",
+  "version": "1.0.0",
+  "description": "**Note: Implementation provided for Bitcoin**",
+  "main": "truffle-config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "openzeppelin-solidity": "1.11.0"
+  }
+}
