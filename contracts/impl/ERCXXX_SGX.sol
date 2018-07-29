@@ -10,7 +10,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../ERCXXX_Base_Interface.sol";
 
 
-contract ERCXXX_SGX_BaseToken is ERCXXX_Base_Interface {
+contract ERCXXX_SGX is ERCXXX_Base_Interface {
     using SafeMath for uint256;
 
     // #####################
