@@ -98,14 +98,14 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         return issuerList;
     }
 
-    function authorizeIssuer(address toRegister, bytes data) public {
+    function authorizeIssuer(address toRegister, bytes data) public payable {
         require(msg.value >= minimumCollateral);
         issuers[toRegister] = true;
         issuerList.push(toRegister);
         emit AuthorizedIssuer(toRegister, msg.value, data);
     }
 
-    function revokeIssuer(address toUnlist, bytes data) public {
+    function revokeIssuer(address toUnlist, bytes data) private {
         issuers[toUnlist] = false;
         emit RevokedIssuer(toUnlist, data);
     }

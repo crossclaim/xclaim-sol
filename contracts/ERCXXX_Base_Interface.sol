@@ -100,9 +100,9 @@ contract ERCXXX_Base_Interface {
    * CAUTION: may have to be set to private in SGX version, if no modification to issuers is wanted
    * Private won't work - private in Solidity is in the sense of: only the contract can call, not private to specific parties.
    */
-    function authorizeIssuer(address toRegister, bytes data) public;
+    function authorizeIssuer(address toRegister, bytes data) public payable;
 
-    function revokeIssuer(address toUnlist, bytes data) public;
+    function revokeIssuer(address toUnlist, bytes data) private;
 
     /**
     * Issues new units of cryptocurrency-backed token.
