@@ -106,14 +106,13 @@ contract ERCXXX_Base_Interface {
 
     /**
     * Issues new units of cryptocurrency-backed token.
-    * @param sender - issuer
     * @param receiver - ETH address of the receiver, as provided in the 'lock' transaction in the native native currency
     * @param data - data, contains 'lock' transaction [OPTIONAL?]
     * TODO: decide if data this is required. We probably only need the txid
     *
     * ASSERT: msg.sender in relayer list, abort otherwise.
     */
-    function issue(address sender, address receiver, bytes data) public;
+    function issue(address receiver, bytes data) public;
 
     /**
     * Transfers ownership of tokens to another user. Allows to potentially lock the funds with another issuer.
@@ -154,9 +153,9 @@ contract ERCXXX_Base_Interface {
    * @param collateral - provided collateral
    * @param data - data, contains evtl. necessary data (e.g., lock transaction for native currency collateral)
    */
-    event AuthroizedIssuer(address indexed issuer, uint collateral, bytes data);
+    event AuthorizedIssuer(address indexed issuer, uint collateral, bytes data);
 
-    event RevokedIssuer(address indexed issuer, uint collateral, bytes data);
+    event RevokedIssuer(address indexed issuer, bytes data);
 
     /**
     * Issue event:
