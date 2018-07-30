@@ -132,6 +132,16 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
     }
 
     function redeem(address redeemer, bytes data) public {
-        balances[redeemer] -= 1;
+        /* This method can only be called by an Issuer */
+        require(issuers[msg.sender]);
+
+        /* TODO get the amount to be redeemed from the 'data' parameter and verify the signature of the redeemer */
+        uint256 amount = 1;
+
+        /* The redeemer must have enough tokens to burn */
+        require(balances[redeemer] >= amount);
+
+        balances[redeemer] -= amount;
+        emit Redeem(redeemer, msg.sender, amount, data);
     }
 }
