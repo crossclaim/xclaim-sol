@@ -19,8 +19,9 @@ contract('ERCXXX_SGX', async (accounts) => {
 
         let initialIssuerList = await btc_erc.issuerList.call();
 
-        let issue_tx = await btc_erc.authorizeIssuer(issuer, "", { from: issuer, value: web3.toWei(1, "ether") });
-        eventFired(issue_tx, "AuthorizedIssuer");
+        let authorize_tx = await btc_erc.authorizeIssuer(issuer, "", { from: issuer, value: web3.toWei(1, "ether") });
+        eventFired(authorize_tx, "AuthorizedIssuer");
+        // console.log(authorize_tx.receipt.gasUsed);
 
         let updatedIssuerList = await btc_erc.issuerList.call();
 
@@ -31,7 +32,13 @@ contract('ERCXXX_SGX', async (accounts) => {
     it("Issue tokens", async () => {
         let btc_erc = await ERCXXX_SGX.deployed();
 
-        assert.isTrue(true);
+        let authorize_tx = await btc_erc.authorizeIssuer(issuer, "", { from: issuer, value: web3.toWei(1, "ether") });
+        eventFired(authorize_tx, "AuthorizedIssuer");
+
+        let issue_tx = await btc_erc.issue(alice, "BTC_TX");
+        eventFired(issue_tx, "Issue");
+
+        // TODO: check if alice received it
     });
 
 
