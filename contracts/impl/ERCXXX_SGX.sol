@@ -56,6 +56,10 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         symbol = _symbol;
         granularity = _granularity;
         totalSupply = 0;
+        // TODO: value
+        contestationPeriod = 1;
+        // TODO: value
+        graceRedeemPeriod = 1;
     }
 
     // #####################
@@ -99,6 +103,7 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
     }
 
     function authorizeIssuer(address toRegister, bytes data) public payable {
+        // TODO: Do we need the data argument?
         require(msg.value >= minimumCollateral);
         issuers[toRegister] = true;
         issuerList.push(toRegister);
