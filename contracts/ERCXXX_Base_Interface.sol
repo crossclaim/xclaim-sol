@@ -131,8 +131,6 @@ contract ERCXXX_Base_Interface {
     */
     function transfer(address sender, address receiver, bytes data) public;
 
-
-
     /**
     * Initiates the redeeming of backed-tokens in the native cryptocurrency. Redeemed tokens are 'burned' in the process.
     * @param redeemer - redeemer address

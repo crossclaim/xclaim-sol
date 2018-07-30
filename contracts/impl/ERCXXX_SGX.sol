@@ -108,14 +108,14 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         balances[_receiver] += 1;
     }
 
-    /* Transfer of some amount of tokens from _sender to _receiver.
-       We can remove the _data bytes or interpret it as the _amount directly */
-    function transfer(address _sender, address _receiver, uint _amount, bytes _data) public {
-        require(balances[_sender] >= _amount);
-        require(_receiver != address(0));
-        balances[_sender] = balances[_sender] - _amount;
-        balances[_receiver] = balances[_receiver] + _amount;
-        emit Transfer(_sender, _receiver, _amount, _data);
+    function transfer(address sender, address receiver, bytes data) public {
+        /* TODO: verify data (the new 'lock' transaction) and extract the amount of tokens to be created */
+        uint256 amount = 1;
+
+        require(balances[sender] >= amount);
+        balances[sender] = balances[sender] - amount;
+        balances[receiver] = balances[receiver] + amount;
+        emit Transfer(sender, receiver, amount, data);
     }
 
     function redeem(address _redeemer, bytes _data) public {
