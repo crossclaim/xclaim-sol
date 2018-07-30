@@ -118,7 +118,7 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         uint256 amount = 1;
 
         balances[receiver] += amount;
-        emit Issue(msg.sender, receiver, value, data);
+        emit Issue(msg.sender, receiver, amount, data);
     }
 
     function transfer(address sender, address receiver, bytes data) public {
