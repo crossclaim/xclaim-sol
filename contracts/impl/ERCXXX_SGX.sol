@@ -95,17 +95,17 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         return issuerList;
     }
 
-    function authorizeIssuer(address _toRegister, bytes _data) public {
-        issuers[_toRegister] = true;
-        issuerList.push(_toRegister);
+    function authorizeIssuer(address toRegister, bytes data) public {
+        issuers[toRegister] = true;
+        issuerList.push(toRegister);
     }
 
-    function revokeIssuer(address _toUnlist, bytes _data) public {
-        issuers[_toUnlist] = false;
+    function revokeIssuer(address toUnlist, bytes data) public {
+        issuers[toUnlist] = false;
     }
 
-    function issue(address _sender, address _receiver, bytes _data) public {
-        balances[_receiver] += 1;
+    function issue(address sender, address receiver, bytes data) public {
+        balances[receiver] += 1;
     }
 
     function transfer(address sender, address receiver, bytes data) public {
@@ -118,7 +118,7 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         emit Transfer(sender, receiver, amount, data);
     }
 
-    function redeem(address _redeemer, bytes _data) public {
-        balances[_redeemer] -= 1;
+    function redeem(address redeemer, bytes data) public {
+        balances[redeemer] -= 1;
     }
 }

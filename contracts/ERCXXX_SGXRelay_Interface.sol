@@ -35,8 +35,8 @@ contract ERCXXX_SGXRelay_Interface is ERCXXX_Interface, ERCXXX_Tribunal_Interfac
     *
     * ASSERT: sufficient collateral provided
     */
-    function registerRelayer(address toRegister, bytes data);
-    function unlistRelayer(address toUnlist, bytes data);
+    function registerRelayer(address toRegister, bytes data) public;
+    function unlistRelayer(address toUnlist, bytes data) public;
 
     /**
    * Register/Unlist Relayer revent:

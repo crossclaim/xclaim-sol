@@ -25,14 +25,14 @@ contract ERCXXX_Tribunal_Interface {
     *
     * ASSERT: user has provided sufficient collateral.
     */
-    function accuse(address redeemer, uint id);
+    function accuse(address redeemer, uint id) public;
 
     /**
     * Issuer (or any user on behalf of the issuer)
     *
     * ASSERT: callable only by issuers
     */
-    function rebut(uint id, bytes data);
+    function rebut(uint id, bytes data) public;
 
 
     // #####################

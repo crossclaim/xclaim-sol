@@ -35,7 +35,7 @@ contract ERCXXX_BTCRelay_Interface is ERCXXX_Interface, ERCXXX_Tribunal_Interfac
      *
      * CAUTION: evaluate advantages vs risks of this functionality
      */
-    function replaceRelay(address newRelay, bytes data);
+    function replaceRelay(address newRelay, bytes data) public;
 
     // #####################
     // HELPER FUNCTIONS
