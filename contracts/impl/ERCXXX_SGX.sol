@@ -30,7 +30,7 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
 
     mapping(address => uint) public balances;
 
-    address[] public issuerList;
+    address[] public issuersList;
     mapping(address => bool) public issuers;
 
     struct RedeemRequest{
@@ -99,14 +99,14 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
     }
 
     function issuerList() public view returns(address[]) {
-        return issuerList;
+        return issuersList;
     }
 
     function authorizeIssuer(address toRegister, bytes data) public payable {
         // TODO: Do we need the data argument?
         require(msg.value >= minimumCollateral);
         issuers[toRegister] = true;
-        issuerList.push(toRegister);
+        issuersList.push(toRegister);
         emit AuthorizedIssuer(toRegister, msg.value, data);
     }
 

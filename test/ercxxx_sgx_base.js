@@ -17,12 +17,15 @@ contract('ERCXXX_SGX', async (accounts) => {
     it("Register issuer", async () => {
         let btc_erc = await ERCXXX_SGX.deployed();
 
+        let initialIssuerList = await btc_erc.issuerList.call();
+
         let issue_tx = await btc_erc.authorizeIssuer(issuer, "", { from: issuer, value: web3.toWei(1, "ether") });
         eventFired(issue_tx, "AuthorizedIssuer");
 
-        let issuerList = await btc_erc.issuerList.call(issuer);
-        console.log(issuerList)
-        assert.isTrue(web3.isAddress(issuerList));
+        let updatedIssuerList = await btc_erc.issuerList.call();
+
+        assert.isTrue(web3.isAddress(updatedIssuerList));
+        assert.equal(updatedIssuerList[0], issuer);
     });
 
     it("Issue tokens", async () => {
