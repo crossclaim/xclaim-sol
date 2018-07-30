@@ -110,8 +110,15 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         emit RevokedIssuer(toUnlist, data);
     }
 
-    function issue(address sender, address receiver, bytes data) public {
-        balances[receiver] += 1;
+    function issue(address receiver, bytes data) public {
+        /* This method can only be called by an Issuer */
+        require(issuers[msg.sender]);
+
+        /* TODO: verify data ('lock' transaction) and extract the amount of tokens to be issued */
+        uint256 amount = 1;
+
+        balances[receiver] += amount;
+        emit Issue(msg.sender, receiver, value, data);
     }
 
     function transfer(address sender, address receiver, bytes data) public {
