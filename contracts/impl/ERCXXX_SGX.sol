@@ -17,13 +17,16 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
     // CONTRACT VARIABLES
     // #####################
 
+
     string public name;
     string public symbol;
     uint256 public granularity;
     uint256 public totalSupply;
 
-    uint public contestationPeriod;
-    uint public graceRedeemPeriod;
+    uint256 public contestationPeriod;
+    uint256 public graceRedeemPeriod;
+    /* TODO: work out a value for minimum collateral */
+    uint256 public minimumCollateral = 0;
 
     mapping(address => uint) public balances;
 
@@ -96,12 +99,15 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
     }
 
     function authorizeIssuer(address toRegister, bytes data) public {
+        require(msg.value >= minimumCollateral);
         issuers[toRegister] = true;
         issuerList.push(toRegister);
+        emit AuthorizedIssuer(toRegister, msg.value, data);
     }
 
     function revokeIssuer(address toUnlist, bytes data) public {
         issuers[toUnlist] = false;
+        emit RevokedIssuer(toUnlist, data);
     }
 
     function issue(address sender, address receiver, bytes data) public {
