@@ -106,17 +106,8 @@ contract('ERCXXX_SGX', async (accounts) => {
         assert.equal(balance_alice, 1, "Alice balance should be 1");
 
         // check if redeem event fired
-        let redeem_tx = await btc_erc.redeem(alice, "", { from: alice });
-        eventFired(transfer_tx, "Redeem");
-
-        // check if balances are updated
-        balance_alice = await btc_erc.balanceOf.call(alice);
-        balance_alice = balance_alice.toNumber();
-        balance_bob = await btc_erc.balanceOf.call(bob);
-        balance_bob = balance_bob.toNumber();
-
-        assert.equal(balance_alice, 0, "Alice balance should be 0");
-        assert.equal(balance_bob, 1, "Bob balance should be 1");
+        let redeem_tx = await btc_erc.redeem(alice, "", { from: issuer });
+        eventFired(redeem_tx, "Redeem");
     });
 
     function eventFired(transaction, eventName) {
