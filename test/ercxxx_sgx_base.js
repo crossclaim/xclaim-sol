@@ -16,7 +16,7 @@ contract('ERCXXX_SGX', async (accounts) => {
         let initialIssuerList = await btc_erc.issuerList.call();
 
         // check if authorize event fired
-        let authorize_tx = await btc_erc.authorizeIssuer(issuer, "", { from: issuer, value: web3.toWei(1, "ether") });
+        let authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(1, "ether") });
         eventFired(authorize_tx, "AuthorizedIssuer");
         // console.log(authorize_tx.receipt.gasUsed);
 
@@ -29,16 +29,18 @@ contract('ERCXXX_SGX', async (accounts) => {
 
     it("Issue tokens", async () => {
         let balance_alice;
+        let amount = 1;
+        let btc_tx = "BTC_TX";
 
         // check if authorize event fired
-        let authorize_tx = await btc_erc.authorizeIssuer(issuer, "", { from: issuer, value: web3.toWei(1, "ether") });
+        let authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(1, "ether") });
         eventFired(authorize_tx, "AuthorizedIssuer");
 
         balance_alice = await btc_erc.balanceOf.call(alice);
         let init_balance_alice = balance_alice.toNumber();
 
         // check if issue event is fired
-        let issue_tx = await btc_erc.issue(alice, "BTC_TX");
+        let issue_tx = await btc_erc.issue(alice, amount, btc_tx);
         eventFired(issue_tx, "Issue");
 
         balance_alice = await btc_erc.balanceOf.call(alice);
@@ -61,13 +63,14 @@ contract('ERCXXX_SGX', async (accounts) => {
     it("Transfer tokens", async () => {
         let balance_alice, balance_bob;
         let amount = 1;
+        let btc_tx = "BTC_TX";
 
         // check if authorize event fired
-        let authorize_tx = await btc_erc.authorizeIssuer(issuer, "", { from: issuer, value: web3.toWei(1, "ether") });
+        let authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(1, "ether") });
         eventFired(authorize_tx, "AuthorizedIssuer");
 
         // check if issue event is fired
-        let issue_tx = await btc_erc.issue(alice, "BTC_TX");
+        let issue_tx = await btc_erc.issue(alice, amount, btc_tx);
         eventFired(issue_tx, "Issue");
 
         // check if Alice's balance is updated
@@ -91,13 +94,16 @@ contract('ERCXXX_SGX', async (accounts) => {
 
     it("Redeem tokens", async () => {
         let balance_alice;
+        let amount = 1;
+        let btc_issue_tx = "BTC_ISSUE_TX";
+        let btc_redeem_tx = "BTC_REDEEM_TX";
 
         // check if authorize event fired
-        let authorize_tx = await btc_erc.authorizeIssuer(issuer, "", { from: issuer, value: web3.toWei(1, "ether") });
+        let authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(1, "ether") });
         eventFired(authorize_tx, "AuthorizedIssuer");
 
         // check if issue event is fired
-        let issue_tx = await btc_erc.issue(alice, "BTC_TX");
+        let issue_tx = await btc_erc.issue(alice, amount, btc_issue_tx);
         eventFired(issue_tx, "Issue");
 
         // check if Alice's balance is updated
@@ -106,7 +112,7 @@ contract('ERCXXX_SGX', async (accounts) => {
         assert.equal(balance_alice, 1, "Alice balance should be 1");
 
         // check if redeem event fired
-        let redeem_tx = await btc_erc.redeem(alice, "", { from: issuer });
+        let redeem_tx = await btc_erc.redeem(alice, amount, btc_redeem_tx, { from: issuer });
         eventFired(redeem_tx, "Redeem");
     });
 
