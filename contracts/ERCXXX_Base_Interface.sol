@@ -118,7 +118,7 @@ contract ERCXXX_Base_Interface {
     * Transfers ownership of tokens to another user. Allows to potentially lock the funds with another issuer.
     * @param sender - sender address
     * @param receiver - receiver address
-    * @param data - data, contains the new 'lock' transaction
+    * @param amount - data, contains the new 'lock' transaction
     *
     * ASSERT:
     * -) Sender actually owns the specified tokens.
@@ -128,7 +128,7 @@ contract ERCXXX_Base_Interface {
     * -) does this tx actually spend from the first 'lock' tx correctly. Will require call to relay.
     * -) is the transferred amount high enough to cover native tx fees. Will require call to relay.
     */
-    function transfer(address sender, address receiver, bytes data) public;
+    function transferFrom(address sender, address receiver, uint256 amount) public;
 
     /**
     * Initiates the redeeming of backed-tokens in the native cryptocurrency. Redeemed tokens are 'burned' in the process.
@@ -171,9 +171,8 @@ contract ERCXXX_Base_Interface {
     * @param sender - ETH address of the sender
     * @param receiver - ETH address of the receiver
     * @param value - transferred value
-    * @param data - data, contains new 'lock' transaction
     */
-    event Transfer(address indexed sender, address indexed receiver, uint value, bytes data);
+    event Transfer(address indexed sender, address indexed receiver, uint value);
 
     /**
     * Redeem event:

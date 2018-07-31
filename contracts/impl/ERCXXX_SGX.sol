@@ -126,14 +126,14 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         emit Issue(msg.sender, receiver, amount, data);
     }
 
-    function transfer(address sender, address receiver, bytes data) public {
+    function transferFrom(address sender, address receiver, uint256 amount) public {
         /* TODO: verify data (the new 'lock' transaction) and extract the amount of tokens to be created */
-        uint256 amount = 1;
+        // uint256 amount = 1;
 
         require(balances[sender] >= amount);
         balances[sender] = balances[sender] - amount;
         balances[receiver] = balances[receiver] + amount;
-        emit Transfer(sender, receiver, amount, data);
+        emit Transfer(sender, receiver, amount);
     }
 
     function redeem(address redeemer, bytes data) public {
