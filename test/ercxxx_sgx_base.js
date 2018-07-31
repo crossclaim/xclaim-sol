@@ -1,6 +1,5 @@
 const ERCXXX_SGX = artifacts.require("./impl/ERCXXX_SGX.sol");
 
-
 contract('ERCXXX_SGX', async (accounts) => {
     /* For testing and experiments the following roles apply: */
     const issuer = accounts[0];
@@ -61,6 +60,7 @@ contract('ERCXXX_SGX', async (accounts) => {
 
     it("Transfer tokens", async () => {
         let balance_alice, balance_bob;
+        let amount = 1;
 
         // check if authorize event fired
         let authorize_tx = await btc_erc.authorizeIssuer(issuer, "", { from: issuer, value: web3.toWei(1, "ether") });
@@ -73,10 +73,10 @@ contract('ERCXXX_SGX', async (accounts) => {
         // check if Alice's balance is updated
         balance_alice = await btc_erc.balanceOf.call(alice);
         balance_alice = balance_alice.toNumber();
-        assert.equal(balance_alice, 1, "Alice balance should be 1");
+        assert.equal(balance_alice, amount, "Alice balance should be 1");
 
         // check if transfer event fired
-        let transfer_tx = await btc_erc.transfer(alice, bob, "", {from: alice});
+        let transfer_tx = await btc_erc.transferFrom(alice, bob, 1, {from: alice});
         eventFired(transfer_tx, "Transfer");
 
         // check if balances are updated
@@ -86,7 +86,7 @@ contract('ERCXXX_SGX', async (accounts) => {
         balance_bob = balance_bob.toNumber();
 
         assert.equal(balance_alice, 0, "Alice balance should be 0");
-        assert.equal(balance_bob, 1, "Bob balance should be 1");
+        assert.equal(balance_bob, amount, "Bob balance should be 1");
     });
 
     it("Redeem tokens", async () => {
