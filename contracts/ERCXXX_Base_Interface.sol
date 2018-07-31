@@ -92,7 +92,7 @@ contract ERCXXX_Base_Interface {
     /**
    * Registers / unlists a new issuer
    * @param toRegister - address to be registered/unlisted
-   * @param data - [OPTIONAL] data, contains issuers address in the backed cryptocurrency and
+   * data - [OPTIONAL] data, contains issuers address in the backed cryptocurrency and
    *         any other necessary info for validating the issuer
    *
    * ASSERT: sufficient collateral provided
@@ -100,9 +100,9 @@ contract ERCXXX_Base_Interface {
    * CAUTION: may have to be set to private in SGX version, if no modification to issuers is wanted
    * Private won't work - private in Solidity is in the sense of: only the contract can call, not private to specific parties.
    */
-    function authorizeIssuer(address toRegister, bytes data) public payable;
+    function authorizeIssuer(address toRegister) public payable;
 
-    function revokeIssuer(address toUnlist, bytes data) private;
+    function revokeIssuer(address toUnlist) private;
 
     /**
     * Issues new units of cryptocurrency-backed token.
@@ -142,7 +142,7 @@ contract ERCXXX_Base_Interface {
     *
     * TODO: optional: add checks - is the first 'lock' TX still unspent and does this tx actually spend from the first 'lock' tx correctly. Will require call to relay.
     */
-    function redeem(address redeemer, bytes data) public;
+    function redeem(address redeemer, uint256 amount, bytes data) public;
 
     // #####################
     // EVENTS
@@ -152,11 +152,11 @@ contract ERCXXX_Base_Interface {
    * Register Issue revent:
    * @param issuer - ETH address of the newly registered/unlisted issuer
    * @param collateral - provided collateral
-   * @param data - data, contains evtl. necessary data (e.g., lock transaction for native currency collateral)
+   * data - data, contains evtl. necessary data (e.g., lock transaction for native currency collateral)
    */
-    event AuthorizedIssuer(address indexed issuer, uint collateral, bytes data);
+    event AuthorizedIssuer(address indexed issuer, uint collateral);
 
-    event RevokedIssuer(address indexed issuer, bytes data);
+    event RevokedIssuer(address indexed issuer);
 
     /**
     * Issue event:
