@@ -107,12 +107,13 @@ contract ERCXXX_Base_Interface {
     /**
     * Issues new units of cryptocurrency-backed token.
     * @param receiver - ETH address of the receiver, as provided in the 'lock' transaction in the native native currency
+    * @param amount - number of issued tokens
     * @param data - data, contains 'lock' transaction [OPTIONAL?]
     * TODO: decide if data this is required. We probably only need the txid
     *
     * ASSERT: msg.sender in relayer list, abort otherwise.
     */
-    function issue(address receiver, bytes data) public;
+    function issue(address receiver, uint256 amount, bytes data) public;
 
     /**
     * Transfers ownership of tokens to another user. Allows to potentially lock the funds with another issuer.

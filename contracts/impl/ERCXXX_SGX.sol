@@ -115,12 +115,12 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         emit RevokedIssuer(toUnlist, data);
     }
 
-    function issue(address receiver, bytes data) public {
+    function issue(address receiver, uint256 amount, bytes data) public {
         /* This method can only be called by an Issuer */
         require(issuers[msg.sender]);
 
         /* TODO: verify data ('lock' transaction) and extract the amount of tokens to be issued */
-        uint256 amount = 1;
+        // uint256 amount = amount;
 
         balances[receiver] += amount;
         emit Issue(msg.sender, receiver, amount, data);
@@ -136,12 +136,12 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         emit Transfer(sender, receiver, amount);
     }
 
-    function redeem(address redeemer, bytes data) public {
+    function redeem(address redeemer, uint256 amount, bytes data) public {
         /* This method can only be called by an Issuer */
         require(issuers[msg.sender]);
 
         /* TODO get the amount to be redeemed from the 'data' parameter and verify the signature of the redeemer */
-        uint256 amount = 1;
+        // uint256 amount = 1;
 
         /* The redeemer must have enough tokens to burn */
         require(balances[redeemer] >= amount);
