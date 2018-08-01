@@ -1,8 +1,12 @@
 const ERCXXX_SGX = artifacts.require("./impl/ERCXXX_SGX.sol");
+var csvWriter = require('csv-write-stream');
+const Client = require('bitcoin-core');
+
 
 contract('ERCXXX_SGX', async (accounts) => {
     /* For testing and experiments the following roles apply: */
     const issuer = accounts[0];
+    const collateral = 0;
     const alice = accounts[1];
     const bob = accounts[2];
     const charlie = accounts[3];
@@ -14,23 +18,23 @@ contract('ERCXXX_SGX', async (accounts) => {
 
     it("Authorize issuer", async () => {
         // check if authorize event fired
-        let authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(1, "ether") });
+        let authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(collateral, "ether") });
         eventFired(authorize_tx, "AuthorizedIssuer");
         // console.log(authorize_tx.receipt.gasUsed);
 
         // check if issuer list is updated
-        let updatedIssuerList = await btc_erc.issuerList.call();
+        let updatedIssuer = await btc_erc.issuer.call();
 
-        assert.isTrue(web3.isAddress(updatedIssuerList));
-        assert.equal(updatedIssuerList[0], issuer);
+        assert.isTrue(web3.isAddress(updatedIssuer));
+        assert.equal(updatedIssuer, issuer);
     });
 
     it("Authorize and revoke issuer", async () => {
         // TODO: Implement test to revoke issuer
-        let initialIssuerList = await btc_erc.issuerList.call();
+        let initialIssuer = await btc_erc.issuer.call();
 
         // check if authorize event fired
-        let authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(1, "ether") });
+        let authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(collateral, "ether") });
         eventFired(authorize_tx, "AuthorizedIssuer");
         // console.log(authorize_tx.receipt.gasUsed);
 
@@ -50,7 +54,7 @@ contract('ERCXXX_SGX', async (accounts) => {
         let btc_tx = "BTC_TX";
 
         // check if authorize event fired
-        let authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(1, "ether") });
+        let authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(collateral, "ether") });
         eventFired(authorize_tx, "AuthorizedIssuer");
 
         balance_alice = await btc_erc.balanceOf.call(alice);
@@ -83,7 +87,7 @@ contract('ERCXXX_SGX', async (accounts) => {
         let btc_tx = "BTC_TX";
 
         // check if authorize event fired
-        let authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(1, "ether") });
+        let authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(collateral, "ether") });
         eventFired(authorize_tx, "AuthorizedIssuer");
 
         // check if issue event is fired
@@ -116,7 +120,7 @@ contract('ERCXXX_SGX', async (accounts) => {
         let btc_redeem_tx = "BTC_REDEEM_TX";
 
         // check if authorize event fired
-        let authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(1, "ether") });
+        let authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(collateral, "ether") });
         eventFired(authorize_tx, "AuthorizedIssuer");
 
         // check if issue event is fired

@@ -87,7 +87,7 @@ contract ERCXXX_Base_Interface {
     // #####################
     // FUNCTIONS
     // #####################
-    function issuerList() public view returns(address[]);
+    function issuer() public view returns(address);
 
     /**
    * Registers / unlists a new issuer

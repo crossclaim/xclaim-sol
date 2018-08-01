@@ -3,7 +3,7 @@ pragma solidity ^0.4.24;
 /// @title ERCXXX ReferenceToken Contract
 /// @author Dominik Harz
 /// @dev This token contract's goal is to give an example implementation
-///  of ERCXXX with ERC223 compatibility.
+///  of ERCXXX with ERC20 compatibility.
 ///  This contract does not define any standard, but can be taken as a reference
 ///  implementation in case of any ambiguity into the standard
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
@@ -26,12 +26,12 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
     uint256 public contestationPeriod;
     uint256 public graceRedeemPeriod;
     /* TODO: work out a value for minimum collateral */
-    uint256 public minimumCollateral = 0;
+    uint256 public minimumCollateral;
 
     mapping(address => uint) public balances;
 
-    address[] public issuersList;
-    mapping(address => bool) public issuers;
+    address public issuer;
+    // mapping(address => bool) public issuers;
 
     struct RedeemRequest{
         address redeemer;
@@ -60,6 +60,8 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         contestationPeriod = 1;
         // TODO: value
         graceRedeemPeriod = 1;
+        // No collateral for SGX since we fully trust the issuer
+        minimumCollateral = 0;
     }
 
     // #####################
@@ -98,47 +100,27 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         return redeemRequestList;
     }
 
-    function issuerList() public view returns(address[]) {
-        return issuersList;
+    function issuer() public view returns(address) {
+        return issuer;
     }
 
     function authorizeIssuer(address toRegister) public payable {
-        // TODO: Do we need the data argument?
         require(msg.value >= minimumCollateral);
-        issuers[toRegister] = true;
-        issuersList.push(toRegister);
+        require(issuer==address(0));
+        issuer = toRegister;
+
         emit AuthorizedIssuer(toRegister, msg.value);
     }
 
     function revokeIssuer(address toUnlist) private {
-        /* This method can only be called by the current Issuer */
-        // require(issuers[msg.sender]);
-        // require(msg.sender == toUnlist);
-        require(issuersList.length > 0);
-
-        issuers[toUnlist] = false;
-        // Remove toUnlist without order
-        for (uint256 i = 0; i < issuersList.length; i++) {
-            if (issuersList[i] == toUnlist) {
-                uint256 lastIndex = issuersList.length - 1;
-
-                if (i == lastIndex) {
-                    delete issuersList[i];
-                } else {
-                    issuersList[i] = issuersList[lastIndex];
-                    delete issuersList[lastIndex];
-                }
-
-                issuersList.length--;
-            }
-        }
+        issuer = address(0);
 
         emit RevokedIssuer(toUnlist);
     }
 
     function issue(address receiver, uint256 amount, bytes data) public {
         /* This method can only be called by an Issuer */
-        require(issuers[msg.sender]);
+        require(msg.sender == issuer);
 
         balances[receiver] += amount;
         emit Issue(msg.sender, receiver, amount, data);
@@ -154,7 +136,7 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
 
     function redeem(address redeemer, uint256 amount, bytes data) public {
         /* This method can only be called by an Issuer */
-        require(issuers[msg.sender]);
+        require(msg.sender == issuer);
 
         /* The redeemer must have enough tokens to burn */
         require(balances[redeemer] >= amount);
