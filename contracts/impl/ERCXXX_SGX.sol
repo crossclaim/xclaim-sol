@@ -111,8 +111,27 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
     }
 
     function revokeIssuer(address toUnlist) private {
+        /* This method can only be called by the current Issuer */
+        // require(issuers[msg.sender]);
+        // require(msg.sender == toUnlist);
+        require(issuersList.length > 0);
+
         issuers[toUnlist] = false;
-        // TODO: remove from issuers list
+        // Remove toUnlist without order
+        for (uint256 i = 0; i < issuersList.length; i++) {
+            if (issuersList[i] == toUnlist) {
+                uint256 lastIndex = issuersList.length - 1;
+
+                if (i == lastIndex) {
+                    delete issuersList[i];
+                } else {
+                    issuersList[i] = issuersList[lastIndex];
+                    delete issuersList[lastIndex];
+                }
+
+                issuersList.length--;
+            }
+        }
 
         emit RevokedIssuer(toUnlist);
     }
@@ -127,6 +146,7 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
 
     function transferFrom(address sender, address receiver, uint256 amount) public {
         require(balances[sender] >= amount);
+
         balances[sender] = balances[sender] - amount;
         balances[receiver] = balances[receiver] + amount;
         emit Transfer(sender, receiver, amount);
