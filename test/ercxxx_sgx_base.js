@@ -12,9 +12,7 @@ contract('ERCXXX_SGX', async (accounts) => {
     });
 
 
-    it("Register issuer", async () => {
-        let initialIssuerList = await btc_erc.issuerList.call();
-
+    it("Authorize issuer", async () => {
         // check if authorize event fired
         let authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(1, "ether") });
         eventFired(authorize_tx, "AuthorizedIssuer");
@@ -25,6 +23,25 @@ contract('ERCXXX_SGX', async (accounts) => {
 
         assert.isTrue(web3.isAddress(updatedIssuerList));
         assert.equal(updatedIssuerList[0], issuer);
+    });
+
+    it("Authorize and revoke issuer", async () => {
+        // TODO: Implement test to revoke issuer
+        let initialIssuerList = await btc_erc.issuerList.call();
+
+        // check if authorize event fired
+        let authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(1, "ether") });
+        eventFired(authorize_tx, "AuthorizedIssuer");
+        // console.log(authorize_tx.receipt.gasUsed);
+
+        // let revoke_tx = await btc_erc.revokeIssuer(issuer, { from: issuer});
+        // eventFired(revoke_tx, "RevokedIssuer");
+
+        // check if issuer list is updated
+        // let updatedIssuerList = await btc_erc.issuerList.call();
+
+        // assert.equal(initialIssuerList, updatedIssuerList);
+        assert.isTrue(true);
     });
 
     it("Issue tokens", async () => {
