@@ -25,6 +25,7 @@ contract ERCXXX_SGXRelay is ERCXXX_SGXRelay_Interface, ERCXXX_SGX {
         uint redeemTime;
     }
 
+    uint256 redeemRequestId;
     uint256[] public redeemRequestList;
     mapping(uint => RedeemRequest) public redeemRequestMapping;
 
@@ -91,8 +92,25 @@ contract ERCXXX_SGXRelay is ERCXXX_SGXRelay_Interface, ERCXXX_SGX {
         /* The redeemer must have enough tokens to burn */
         require(balances[redeemer] >= amount);
 
-        // balances[redeemer] -= amount;
-        emit Redeem(redeemer, msg.sender, amount, data);
-    } 
+        time = 1 days;
 
+        
+        redeemRequestId++;
+        redeemRequestList.push(redeemRequestId);
+        RedeemRequest myRedeemRequest = new RedeemRequest(redeemer, amount, (now + time));
+
+        redeemRequestMapping[redeemRequestId] = myRedeemRequest;
+
+        // balances[redeemer] -= amount;
+        // Update this to include ID
+        emit Redeem(redeemer, msg.sender, amount, data);
+    }
+
+    function redeemRequest(address redeemer, uint256 id) public {
+        require(redeemRequestMapping[id].redeemTime < now);
+        require(redeemRequestMapping[id].value <= balances[redeemer]);
+
+        balances[redeemer] -= redeemRequestMapping[id].value;
+        emit RedeemSuccess(redeemer, id);
+    }
 }
