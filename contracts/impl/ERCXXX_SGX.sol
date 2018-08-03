@@ -27,6 +27,8 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
     uint256 public graceRedeemPeriod;
     /* TODO: work out a value for minimum collateral */
     uint256 public minimumCollateral;
+    /* Commitment by user for issuing of tokens */
+    uint256 public minimumCollateralCommitment = 1;
 
     mapping(address => uint) public balances;
 
@@ -41,6 +43,18 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
 
     uint256[] public redeemRequestList;
     mapping(uint => RedeemRequest) public redeemRequestMapping;
+
+    /* The below shall be converted to mappings when multiple issuers are introduced */
+    /* Total token supply, depends on provided issuer collateral */
+    uint256 issuerTokenSupply;
+    /* Total commited tokens, shouldn't exceed the supply */
+    uint256 issuerCommitedTokens; // modify on issue and redeem
+    struct CommitedCollateral {
+      uint256 commitTimeLimit;
+      uint256 collateral;
+    }
+    /* This can be enriched to allow multiple requests per user, but it's not of huge importance at the moment */
+    mapping(address => CommitedCollateral) userCommitedCollateral;
 
     // All events are defined in the interface contract - no need to double it here
     /* Event emitted when a transfer is done */
@@ -62,6 +76,10 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         graceRedeemPeriod = 1;
         // No collateral for SGX since we fully trust the issuer
         minimumCollateral = 0;
+        // Minimum Ether to be commited by user for issuing of tokens
+        minimumCollateralCommitment = 1;
+        issuerTokenSupply = 0;
+        issuerCommitedTokens = 0;
     }
 
     // #####################
