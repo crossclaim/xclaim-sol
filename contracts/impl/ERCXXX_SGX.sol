@@ -1,7 +1,7 @@
 pragma solidity ^0.4.24;
 
 /// @title ERCXXX ReferenceToken Contract
-/// @author Dominik Harz
+/// @author Dominik Harz, Panayiotis Panayiotou
 /// @dev This token contract's goal is to give an example implementation
 ///  of ERCXXX with ERC20 compatibility.
 ///  This contract does not define any standard, but can be taken as a reference
@@ -132,7 +132,7 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         emit AuthorizedIssuer(toRegister, msg.value);
     }
 
-    function convertEthToBtc(uint256 eth) private returns(uint256) {
+    function convertEthToBtc(uint256 eth) private pure returns(uint256) {
       /* TODO use a contract that uses middleware to get the conversion rate */
         uint256 conversionRate = 2;
         return eth * conversionRate;
@@ -140,6 +140,7 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
 
     function revokeIssuer(address toUnlist) private {
         /* TODO add checks on who calls this */
+        /* TODO return collateral to issuer */
         issuer = address(0);
         emit RevokedIssuer(toUnlist);
     }
@@ -161,7 +162,9 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         /* This method can only be called by an Issuer */
         require(msg.sender == issuer);
 
+        totalSupply += amount;
         balances[receiver] += amount;
+
         emit Issue(msg.sender, receiver, amount, data);
     }
 
@@ -180,6 +183,7 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         /* The redeemer must have enough tokens to burn */
         require(balances[redeemer] >= amount);
 
+        totalSupply -= amount;
         balances[redeemer] -= amount;
         emit Redeem(redeemer, msg.sender, amount, data);
     }
