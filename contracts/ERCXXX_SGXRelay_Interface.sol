@@ -41,10 +41,10 @@ contract ERCXXX_SGXRelay_Interface is ERCXXX_Interface, ERCXXX_Tribunal_Interfac
     /**
    * Register/Unlist Relayer revent:
    * @param relayer - ETH address of the newly registered/unlisted relayer
-   * @param collateral - provided collateral
+   * collateral - provided collateral // not needed
    * @param data - data, contains evtl. necessary data (e.g., lock transaction for native currency collateral)
    */
-    event AuthroizeRelayer(address indexed relayer, uint collateral, bytes data);
-    event RevokeRelayer(address indexed relayer, uint collateral, bytes data);
+    event AuthroizeRelayer(address indexed relayer, bytes data);
+    event RevokeRelayer(address indexed relayer, bytes data);
 
 }
