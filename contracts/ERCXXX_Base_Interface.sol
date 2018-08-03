@@ -81,8 +81,6 @@ contract ERCXXX_Base_Interface {
 
     function granularity() public view returns (uint256);
 
-    function pendingRedeemRequests() public view returns(uint256[]);
-
 
     // #####################
     // FUNCTIONS

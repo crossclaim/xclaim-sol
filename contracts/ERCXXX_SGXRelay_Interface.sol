@@ -38,6 +38,8 @@ contract ERCXXX_SGXRelay_Interface is ERCXXX_Interface, ERCXXX_Tribunal_Interfac
     function authorizeRelayer(address toRegister, bytes data) public;
     function revokeRelayer(address toUnlist, bytes data) public;
 
+    function pendingRedeemRequests() public view returns(uint256[]);
+
     /**
    * Register/Unlist Relayer revent:
    * @param relayer - ETH address of the newly registered/unlisted relayer
