@@ -131,10 +131,28 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         emit AuthorizedIssuer(toRegister, msg.value);
     }
 
+    function convertEthToBtc(uint256 eth) private returns(uint256) {
+      /* TODO use a contract that uses middleware to get the conversion rate */
+      uint256 conversionRate = 2;
+      return eth * conversionRate;
+    }
+
     function revokeIssuer(address toUnlist) private {
         issuer = address(0);
-
         emit RevokedIssuer(toUnlist);
+    }
+
+    function requestTokenIssue(uint256 amount) public payable {
+      require(msg.value >= minimumCollateralCommitment);
+      /* If there is not enough tokens, return back the collateral */
+      if (issuerTokenSupply < amount + issuerCommitedTokens) { // TODO might need a 3rd variable here
+        msg.sender.transfer(msg.value);
+        return;
+      }
+      uint256 timelock = now + 1 days;
+      issuerCommitedTokens += amount;
+      userCommitedCollateral[msg.sender] = CommitedCollateral(timelock, amount);
+      // emit event
     }
 
     function issue(address receiver, uint256 amount, bytes data) public {
