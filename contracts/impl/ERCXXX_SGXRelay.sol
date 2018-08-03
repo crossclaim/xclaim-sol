@@ -7,7 +7,7 @@ pragma solidity ^0.4.24;
 ///  This contract does not define any standard, but can be taken as a reference
 ///  implementation in case of any ambiguity into the standard
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "../ERCXXX_Base_Interface.sol";
+import "../ERCXXX_SGXRelay_Interface.sol";
 import "./ERCXXX_SGX.sol";
 
 
@@ -19,7 +19,7 @@ contract ERCXXX_SGXRelay is ERCXXX_SGXRelay_Interface, ERCXXX_SGX {
     // CONTRACT VARIABLES
     // #####################
 
-    address relayer;
+    mapping(address => bool) public relayer;
 
     // #####################
     // CONSTRUCTOR
@@ -48,30 +48,32 @@ contract ERCXXX_SGXRelay is ERCXXX_SGXRelay_Interface, ERCXXX_SGX {
         /* TODO: who authroizes this? */
         // Do we need the data argument?
         // Does the relayer need to provide collateral?
-        require(relayer == address(0));
+        require(!relayer[toRegister]);
+        require(!relayer[msg.sender]);
 
-        relayer = toRegister;
-        emit AuthroizeRelayer(msg.sender, 1, data);
+        relayer[toRegister] = true;
+        emit AuthroizeRelayer(msg.sender, data);
     }
 
     function revokeRelayer(address toUnlist, bytes data) public {
-        require(msg.sender == relayer);
+        require(relayer[toUnlist]);
+        require(relayer[msg.sender]);
 
-        realyer = address(0);
-        emit RevokeRelayer(msg.sender, 1, data);
+        relayer[toUnlist] = false;
+        emit RevokeRelayer(msg.sender, data);
     }
 
     function issue(address receiver, uint256 amount, bytes data) public {
-        /* This method can only be called by an Issuer */
-        require(msg.sender == issuer);
+        /* This method can only be called by a relayer */
+        require(relayer[msg.sender]);
 
         balances[receiver] += amount;
         emit Issue(msg.sender, receiver, amount, data);
     }
 
     function redeem(address redeemer, uint256 amount, bytes data) public {
-        /* This method can only be called by an Issuer */
-        require(msg.sender == issuer);
+        /* This method can only be called by a relayer */
+        require(relayer[msg.sender]);
 
         /* The redeemer must have enough tokens to burn */
         require(balances[redeemer] >= amount);
