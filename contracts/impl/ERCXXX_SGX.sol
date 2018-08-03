@@ -34,15 +34,7 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
 
     address public issuer;
     // mapping(address => bool) public issuers;
-
-    struct RedeemRequest{
-        address redeemer;
-        uint value;
-        uint redeemTime;
-    }
-
-    uint256[] public redeemRequestList;
-    mapping(uint => RedeemRequest) public redeemRequestMapping;
+    
 
     /* The below shall be converted to mappings when multiple issuers are introduced */
     /* Total token supply, depends on provided issuer collateral */
@@ -113,10 +105,6 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
     // #####################
     // FUNCTIONS
     // #####################
-
-    function pendingRedeemRequests() public view returns(uint256[]) {
-        return redeemRequestList;
-    }
 
     function issuer() public view returns(address) {
         return issuer;

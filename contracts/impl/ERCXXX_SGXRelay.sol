@@ -19,6 +19,15 @@ contract ERCXXX_SGXRelay is ERCXXX_SGXRelay_Interface, ERCXXX_SGX {
     // CONTRACT VARIABLES
     // #####################
 
+    struct RedeemRequest{
+        address redeemer;
+        uint value;
+        uint redeemTime;
+    }
+
+    uint256[] public redeemRequestList;
+    mapping(uint => RedeemRequest) public redeemRequestMapping;
+
     mapping(address => bool) public relayer;
 
     // #####################
@@ -42,6 +51,10 @@ contract ERCXXX_SGXRelay is ERCXXX_SGXRelay_Interface, ERCXXX_SGX {
         minimumCollateralCommitment = 1;
         issuerTokenSupply = 0;
         issuerCommitedTokens = 0;
+    }
+
+    function pendingRedeemRequests() public view returns(uint256[]) {
+        return redeemRequestList;
     }
 
     function authorizeRelayer(address toRegister, bytes data) public {
@@ -78,7 +91,7 @@ contract ERCXXX_SGXRelay is ERCXXX_SGXRelay_Interface, ERCXXX_SGX {
         /* The redeemer must have enough tokens to burn */
         require(balances[redeemer] >= amount);
 
-        balances[redeemer] -= amount;
+        // balances[redeemer] -= amount;
         emit Redeem(redeemer, msg.sender, amount, data);
     } 
 
