@@ -106,7 +106,8 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
 
     function authorizeIssuer(address toRegister) public payable {
         require(msg.value >= minimumCollateral);
-        require(issuer==address(0));
+        /* Allows only 1 Issuer */
+        require(issuer == address(0));
         issuer = toRegister;
 
         emit AuthorizedIssuer(toRegister, msg.value);
