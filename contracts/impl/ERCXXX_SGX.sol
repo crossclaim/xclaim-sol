@@ -127,7 +127,8 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         /* Allows only 1 Issuer */
         require(issuer == address(0));
         issuer = toRegister;
-
+        /* Total amount of tokens that you can issue */
+        issuerTokenSupply = convertEthToBtc(msg.value);
         emit AuthorizedIssuer(toRegister, msg.value);
     }
 
@@ -138,6 +139,7 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
     }
 
     function revokeIssuer(address toUnlist) private {
+        /* TODO add checks on who calls this */
         issuer = address(0);
         emit RevokedIssuer(toUnlist);
     }
