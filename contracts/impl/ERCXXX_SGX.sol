@@ -50,8 +50,8 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
     /* Total commited tokens, shouldn't exceed the supply */
     uint256 issuerCommitedTokens; // modify on issue and redeem
     struct CommitedCollateral {
-      uint256 commitTimeLimit;
-      uint256 collateral;
+        uint256 commitTimeLimit;
+        uint256 collateral;
     }
     /* This can be enriched to allow multiple requests per user, but it's not of huge importance at the moment */
     mapping(address => CommitedCollateral) userCommitedCollateral;
@@ -134,8 +134,8 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
 
     function convertEthToBtc(uint256 eth) private returns(uint256) {
       /* TODO use a contract that uses middleware to get the conversion rate */
-      uint256 conversionRate = 2;
-      return eth * conversionRate;
+        uint256 conversionRate = 2;
+        return eth * conversionRate;
     }
 
     function revokeIssuer(address toUnlist) private {
@@ -145,16 +145,16 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
     }
 
     function requestTokenIssue(uint256 amount) public payable {
-      require(msg.value >= minimumCollateralCommitment);
-      /* If there is not enough tokens, return back the collateral */
-      if (issuerTokenSupply < amount + issuerCommitedTokens) { // TODO might need a 3rd variable here
-        msg.sender.transfer(msg.value);
-        return;
-      }
-      uint256 timelock = now + 1 days;
-      issuerCommitedTokens += amount;
-      userCommitedCollateral[msg.sender] = CommitedCollateral(timelock, amount);
-      // emit event
+        require(msg.value >= minimumCollateralCommitment);
+        /* If there is not enough tokens, return back the collateral */
+        if (issuerTokenSupply < amount + issuerCommitedTokens) { // TODO might need a 3rd variable here
+            msg.sender.transfer(msg.value);
+            return;
+        }
+        uint256 timelock = now + 1 days;
+        issuerCommitedTokens += amount;
+        userCommitedCollateral[msg.sender] = CommitedCollateral(timelock, amount);
+        // emit event
     }
 
     function issue(address receiver, uint256 amount, bytes data) public {
