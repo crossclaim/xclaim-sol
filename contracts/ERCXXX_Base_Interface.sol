@@ -167,11 +167,13 @@ contract ERCXXX_Base_Interface {
 
     /**
     * Transfer event:
-    * @param sender - ETH address of the sender
-    * @param receiver - ETH address of the receiver
-    * @param value - transferred value
+    * @param transferOfferId - Index of transfer offer completed
+    * @param tokenParty - ETH address of the party exchanging tokens
+    * @param tokenAmount - amount in tokens transferred
+    * @param ethParty - ETH address of the party exchanging Ether
+    * @param ethAmount - amount in Ether transferred
     */
-    event Transfer(address indexed sender, address indexed receiver, uint value);
+    event Transfer(uint256 transferOfferId, address indexed tokenParty, uint256 tokenAmount, address indexed ethParty, uint256 ethAmount);
 
     /**
     * Redeem event:
