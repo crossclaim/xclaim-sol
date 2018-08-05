@@ -108,6 +108,52 @@ contract('ERCXXX_SGX', async (accounts) => {
         assert.isTrue(true);
     });
 
+    it("Trade tokens", async () => {
+        let balance_alice, balance_bob;
+        let amount = 1;
+        let btc_tx = "BTC_TX";
+
+        // check if authorize event fired
+        let authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(collateral, "ether") });
+        eventFired(authorize_tx, "AuthorizedIssuer");
+
+        // check if issue event is fired
+        let issue_tx = await btc_erc.issue(alice, amount, btc_tx);
+        eventFired(issue_tx, "Issue");
+
+        // check if Alice's balance is updated
+        balance_alice = await btc_erc.balanceOf.call(alice);
+        balance_alice = balance_alice.toNumber();
+        assert.equal(balance_alice, amount, "Alice balance should be 1");
+
+        // Offer exchange of 1 token for 100 wei
+        let offer_tx = await btc_erc.offerTrade(1, 100, bob, {from: alice});
+        // Check event is fired
+        eventFired(offer_tx, "NewTradeOffer");
+        /* Get offer id*/
+        var offerId = 0;
+        for (var i = 0; i < offer_tx.logs.length; i++) {
+            var log = offer_tx.logs[i];
+            if (log.event == "NewTradeOffer") {
+                // We found the event!
+                offerId = log.args.id.toString();
+            }
+        }
+        // Complete the transfer
+        let trade_tx = await btc_erc.acceptTrade(offerId, {from: bob, value: 100});
+        // Check event is fired
+        eventFired(trade_tx, "Trade");
+
+        // check if balances are updated
+        balance_alice = await btc_erc.balanceOf.call(alice);
+        balance_alice = balance_alice.toNumber();
+        balance_bob = await btc_erc.balanceOf.call(bob);
+        balance_bob = balance_bob.toNumber();
+
+        assert.equal(balance_alice, 0, "Alice balance should be 0");
+        assert.equal(balance_bob, amount, "Bob balance should be 1");
+    });
+
     it("Transfer tokens", async () => {
         let balance_alice, balance_bob;
         let amount = 1;
@@ -127,7 +173,7 @@ contract('ERCXXX_SGX', async (accounts) => {
         assert.equal(balance_alice, amount, "Alice balance should be 1");
 
         // check if transfer event fired
-        let transfer_tx = await btc_erc.transferFrom(alice, bob, 1, {from: alice});
+        let transfer_tx = await btc_erc.transfer(alice, bob, 1, {from: alice});
         eventFired(transfer_tx, "Transfer");
         transfer_gas = transfer_tx.receipt.gasUsed;
 
