@@ -95,14 +95,11 @@ contract ERCXXX_SGXRelay is ERCXXX_SGXRelay_Interface, ERCXXX_SGX {
         /* The redeemer must have enough tokens to burn */
         require(balances[redeemer] >= amount);
 
-        time = 1 days;
+        uint256 time = 1 days;
 
-        
         redeemRequestId++;
         redeemRequestList.push(redeemRequestId);
-        RedeemRequest myRedeemRequest = new RedeemRequest(redeemer, amount, (now + time));
-
-        redeemRequestMapping[redeemRequestId] = myRedeemRequest;
+        redeemRequestMapping[redeemRequestId] = RedeemRequest(redeemer, amount, (now + time));
 
         // balances[redeemer] -= amount;
         // Update this to include ID
