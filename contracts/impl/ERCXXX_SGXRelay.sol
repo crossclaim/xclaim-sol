@@ -19,7 +19,7 @@ contract ERCXXX_SGXRelay is ERCXXX_SGXRelay_Interface, ERCXXX_SGX {
     // CONTRACT VARIABLES
     // #####################
 
-    struct RedeemRequest{
+    struct RedeemRequest {
         address redeemer;
         uint value;
         uint redeemTime;
@@ -66,7 +66,7 @@ contract ERCXXX_SGXRelay is ERCXXX_SGXRelay_Interface, ERCXXX_SGX {
         require(!relayer[msg.sender]);
 
         relayer[toRegister] = true;
-        emit AuthroizeRelayer(msg.sender, data);
+        emit AuthorizeRelayer(msg.sender, data);
     }
 
     function revokeRelayer(address toUnlist, bytes data) public {

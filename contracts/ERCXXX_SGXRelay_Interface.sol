@@ -48,7 +48,7 @@ contract ERCXXX_SGXRelay_Interface is ERCXXX_Interface, ERCXXX_Tribunal_Interfac
    * collateral - provided collateral // not needed
    * @param data - data, contains evtl. necessary data (e.g., lock transaction for native currency collateral)
    */
-    event AuthroizeRelayer(address indexed relayer, bytes data);
+    event AuthorizeRelayer(address indexed relayer, bytes data);
     event RevokeRelayer(address indexed relayer, bytes data);
 
 }
