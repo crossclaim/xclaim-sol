@@ -114,11 +114,21 @@ contract ERCXXX_Base_Interface {
     function issue(address receiver, uint256 amount, bytes data) public;
 
     /**
-    * Offers transferring of tokens for ether to user ethParty.
+    * Offer a trade of tokens for ether.
     * @param tokenAmount - amount of tokens to be exchanged
     * @param ethAmount - amount of Ether to be exchanged
     * @param ethParty - user to exchange tokens for ether with
     *
+    * ASSERT:
+    * -) Sender actually owns the specified tokens.
+    */
+    function offerTrade(uint256 tokenAmount, uint256 ethAmount, address ethParty) public;
+
+    /**
+    * Transfers ownership of tokens to another user. Allows to potentially lock the funds with another issuer.
+    * @param sender - sender address
+    * @param receiver - receiver address
+    * @param amount - data, contains the new 'lock' transaction
     * ASSERT:
     * -) Sender actually owns the specified tokens.
     *
@@ -127,7 +137,7 @@ contract ERCXXX_Base_Interface {
     * -) does this tx actually spend from the first 'lock' tx correctly. Will require call to relay.
     * -) is the transferred amount high enough to cover native tx fees. Will require call to relay.
     */
-    function offerTransfer(uint256 tokenAmount, uint256 ethAmount, address ethParty);
+    function transfer(address sender, address receiver, uint256 amount) public;
 
     /**
     * Initiates the redeeming of backed-tokens in the native cryptocurrency. Redeemed tokens are 'burned' in the process.
