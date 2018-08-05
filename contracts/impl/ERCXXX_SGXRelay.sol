@@ -78,8 +78,11 @@ contract ERCXXX_SGXRelay is ERCXXX_SGXRelay_Interface, ERCXXX_SGX {
     }
 
     function issue(address receiver, uint256 amount, bytes data) public {
-        /* This method can only be called by a relayer */
-        require(relayer[msg.sender]);
+        /* This method can only be called by a BTC relay */
+        address btcrelay;
+        require(msg.sender == btcrelay);
+
+
 
         balances[receiver] += amount;
         emit Issue(msg.sender, receiver, amount, data);

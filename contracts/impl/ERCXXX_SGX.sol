@@ -168,9 +168,30 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         emit Issue(msg.sender, receiver, amount, data);
     }
 
-    function transferFrom(address sender, address receiver, uint256 amount) public {
-        require(balances[sender] >= amount);
+    /* Call this method to make a transfer offer to another party */
+    function offerTrade(uint256 tokenAmount, uint256 ethAmount, address ethParty) public {
+        require(balances[msg.sender] >= tokenAmount);
+        balances[msg.sender] -= tokenAmount;
+        tradeOfferStore[tradeOfferId] = TradeOffer(msg.sender, ethParty, tokenAmount, ethAmount, false);
+        emit NewTradeOffer(tradeOfferId, msg.sender, tokenAmount, ethParty, ethAmount);
+        tradeOfferId += 1;
+    }
 
+    /* Call this method to accept a transfer offer made by another party */
+    function acceptTrade(uint256 offerId) payable public {
+        /* Verify offer exists and the provided ether is enough */
+        require(tradeOfferStore[offerId].completed == false);
+        require(msg.value >= tradeOfferStore[offerId].ethAmount);
+
+        /* Complete the offer */
+        tradeOfferStore[offerId].completed = true;
+        balances[msg.sender] = balances[msg.sender] + tradeOfferStore[offerId].tokenAmount;
+        tradeOfferStore[offerId].tokenParty.transfer(msg.value);
+        emit Trade(offerId, tradeOfferStore[offerId].tokenParty, tradeOfferStore[offerId].tokenAmount, msg.sender, msg.value);
+    }
+
+    function transfer(address sender, address receiver, uint256 amount) public {
+        require(balances[sender] >= amount);
         balances[sender] = balances[sender] - amount;
         balances[receiver] = balances[receiver] + amount;
         emit Transfer(sender, receiver, amount);
