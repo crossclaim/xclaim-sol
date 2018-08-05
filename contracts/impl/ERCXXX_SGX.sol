@@ -48,6 +48,17 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
     /* This can be enriched to allow multiple requests per user, but it's not of huge importance at the moment */
     mapping(address => CommitedCollateral) userCommitedCollateral;
 
+    struct TradeOffer {
+        address tokenParty;
+        address ethParty;
+        uint256 tokenAmount;
+        uint256 ethAmount;
+        bool completed;
+    }
+    event NewTradeOffer(uint256 id, address indexed tokenParty, uint256 tokenAmount, address indexed ethParty, uint256 ethAmount);
+    mapping(uint256 => TradeOffer) tradeOfferStore;
+    uint256 tradeOfferId;
+
     // All events are defined in the interface contract - no need to double it here
     /* Event emitted when a transfer is done */
     // event Transfer(address indexed from, address indexed to, uint256 amount);
@@ -72,6 +83,7 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         minimumCollateralCommitment = 1;
         issuerTokenSupply = 0;
         issuerCommitedTokens = 0;
+        tradeOfferId = 0;
     }
 
     // #####################
@@ -121,7 +133,7 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
     }
 
     function convertEthToBtc(uint256 eth) private pure returns(uint256) {
-      /* TODO use a contract that uses middleware to get the conversion rate */
+        /* TODO use a contract that uses middleware to get the conversion rate */
         uint256 conversionRate = 2;
         return eth * conversionRate;
     }
