@@ -41,7 +41,7 @@ contract ERCXXX_SGXRelay_Interface is ERCXXX_Interface, ERCXXX_Tribunal_Interfac
     function pendingRedeemRequests() public view returns(uint256[]);
 
 
-    event RedeemSuccess(address indexed redeemer, uint256 id)
+    event RedeemSuccess(address indexed redeemer, uint256 id);
     /**
    * Register/Unlist Relayer revent:
    * @param relayer - ETH address of the newly registered/unlisted relayer
