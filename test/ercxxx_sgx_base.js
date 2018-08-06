@@ -20,6 +20,8 @@ contract('ERCXXX_SGX', async (accounts) => {
     // experiment related vars
     var authorize_gas;
     var issue_gas;
+    var trade_offer_gas;
+    var trade_accept_gas;
     var transfer_gas;
     var redeem_gas;
 
@@ -31,6 +33,8 @@ contract('ERCXXX_SGX', async (accounts) => {
         writer.write(
             {
                 Authorize: authorize_gas,
+                TradeOffer: trade_offer_gas,
+                TradeAccept: trade_accept_gas,
                 Issue: issue_gas,
                 Transfer: transfer_gas,
                 Redeem: redeem_gas
@@ -130,6 +134,7 @@ contract('ERCXXX_SGX', async (accounts) => {
         let offer_tx = await btc_erc.offerTrade(1, 100, bob, {from: alice});
         // Check event is fired
         eventFired(offer_tx, "NewTradeOffer");
+        trade_offer_gas = offer_tx.receipt.gasUsed;
         /* Get offer id*/
         var offerId = 0;
         for (var i = 0; i < offer_tx.logs.length; i++) {
@@ -143,6 +148,7 @@ contract('ERCXXX_SGX', async (accounts) => {
         let trade_tx = await btc_erc.acceptTrade(offerId, {from: bob, value: 100});
         // Check event is fired
         eventFired(trade_tx, "Trade");
+        trade_accept_gas = trade_tx.receipt.gasUsed;
 
         // check if balances are updated
         balance_alice = await btc_erc.balanceOf.call(alice);
