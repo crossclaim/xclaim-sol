@@ -91,7 +91,7 @@ contract('ERCXXX_SGX', async (accounts) => {
         let init_balance_alice = balance_alice.toNumber();
 
         // check if issue event is fired
-        let issue_tx = await btc_erc.issue(alice, amount, btc_tx);
+        let issue_tx = await btc_erc.issueCol(alice, amount, btc_tx);
         eventFired(issue_tx, "Issue");
         issue_gas = issue_tx.receipt.gasUsed;
 
@@ -121,7 +121,7 @@ contract('ERCXXX_SGX', async (accounts) => {
         eventFired(authorize_tx, "AuthorizedIssuer");
 
         // check if issue event is fired
-        let issue_tx = await btc_erc.issue(alice, amount, btc_tx);
+        let issue_tx = await btc_erc.issueCol(alice, amount, btc_tx);
         eventFired(issue_tx, "Issue");
 
         // check if Alice's balance is updated
@@ -168,7 +168,7 @@ contract('ERCXXX_SGX', async (accounts) => {
         eventFired(authorize_tx, "AuthorizedIssuer");
 
         // check if issue event is fired
-        let issue_tx = await btc_erc.issue(alice, amount, btc_tx);
+        let issue_tx = await btc_erc.issueCol(alice, amount, btc_tx);
         eventFired(issue_tx, "Issue");
 
         // check if Alice's balance is updated
@@ -200,7 +200,7 @@ contract('ERCXXX_SGX', async (accounts) => {
         eventFired(authorize_tx, "AuthorizedIssuer");
 
         // check if issue event is fired
-        let issue_tx = await btc_erc.issue(alice, amount, btc_tx);
+        let issue_tx = await btc_erc.issueCol(alice, amount, btc_tx);
         eventFired(issue_tx, "Issue");
 
         // check if Alice's balance is updated
