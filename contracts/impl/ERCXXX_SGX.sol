@@ -156,6 +156,7 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         issuerCommitedTokens += amount;
         userCommitedCollateral[msg.sender] = CommitedCollateral(timelock, amount);
         // emit event
+        emit RegisterIssue(msg.sender, amount, timelock);
     }
 
     function issue(address receiver, uint256 amount, bytes data) public {

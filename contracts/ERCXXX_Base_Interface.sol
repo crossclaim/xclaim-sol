@@ -176,6 +176,7 @@ contract ERCXXX_Base_Interface {
     */
     event Issue(address indexed issuer, address indexed receiver, uint value, bytes data);
 
+    event RegisterIssue(address indexed sender, uint256 value, uint256 timelock);
     /**
     * Transfer event:
     * @param sender - ETH address of the sender
