@@ -64,10 +64,10 @@ contract ERCXXX_SGXRelay is ERCXXX_SGX("BTC-ERC-Relay", "BTH", 1), ERCXXX_SGXRel
 
     function issue(address receiver, uint256 amount, bytes data) public {
         /* This method can only be called by a BTC relay */
-
+        // address btcrelay;
+        // require(msg.sender == btcrelay);
         // Should be the SGX relay, but does not matter for now
-        address btcrelay;
-        require(msg.sender == btcrelay);
+        require(relayer[msg.sender]);
 
         balances[receiver] += amount;
         emit Issue(msg.sender, receiver, amount, data);
@@ -80,7 +80,8 @@ contract ERCXXX_SGXRelay is ERCXXX_SGX("BTC-ERC-Relay", "BTH", 1), ERCXXX_SGXRel
         /* The redeemer must have enough tokens to burn */
         require(balances[redeemer] >= amount);
 
-        uint256 time = 1 days;
+        // for testing
+        uint256 time = 1 seconds;
 
         redeemRequestId++;
         redeemRequestList.push(redeemRequestId);
@@ -88,10 +89,10 @@ contract ERCXXX_SGXRelay is ERCXXX_SGX("BTC-ERC-Relay", "BTH", 1), ERCXXX_SGXRel
 
         // balances[redeemer] -= amount;
         // Update this to include ID
-        emit Redeem(redeemer, msg.sender, amount, data);
+        emit Redeem(redeemer, msg.sender, amount, data, redeemRequestId);
     }
 
-    function redeemRequest(address redeemer, uint256 id) public {
+    function redeemConfirm(address redeemer, uint256 id) public {
         require(redeemRequestMapping[id].redeemTime < now);
         require(redeemRequestMapping[id].value <= balances[redeemer]);
 

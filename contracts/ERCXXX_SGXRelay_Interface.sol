@@ -49,4 +49,13 @@ contract ERCXXX_SGXRelay_Interface is ERCXXX_Base_Interface {
     event AuthorizeRelayer(address indexed relayer, bytes data);
     event RevokeRelayer(address indexed relayer, bytes data);
 
+    /**
+    * Redeem event:
+    * @param redeemer - ETH address of the redeemer
+    * @param issuer - ETH address of the issuer
+    * @param value - number of tokens to be redeemed (and hence burned)
+    * @param data - data, contains 'redeem' transaction (to be signed by the issuer)
+    * @param id - ID of the redeeem request
+    */
+    event Redeem(address indexed redeemer, address indexed issuer, uint value, bytes data, uint id);
 }
