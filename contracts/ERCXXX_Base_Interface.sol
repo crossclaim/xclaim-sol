@@ -102,6 +102,7 @@ contract ERCXXX_Base_Interface {
 
     function revokeIssuer(address toUnlist) private;
 
+    function registerIssue(uint256 amount) public payable; 
     /**
     * Issues new units of cryptocurrency-backed token.
     * @param receiver - ETH address of the receiver, as provided in the 'lock' transaction in the native native currency

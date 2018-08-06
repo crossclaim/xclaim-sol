@@ -145,7 +145,7 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         emit RevokedIssuer(toUnlist);
     }
 
-    function requestTokenIssue(uint256 amount) public payable {
+    function registerIssue(uint256 amount) public payable {
         require(msg.value >= minimumCollateralCommitment);
         /* If there is not enough tokens, return back the collateral */
         if (issuerTokenSupply < amount + issuerCommitedTokens) { // TODO might need a 3rd variable here
@@ -207,5 +207,12 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         totalSupply -= amount;
         balances[redeemer] -= amount;
         emit Redeem(redeemer, msg.sender, amount, data);
+    }
+
+    function verifyHTLC() public {
+        // TODO: store bytes
+        // signature
+        // locktime
+        // script
     }
 }
