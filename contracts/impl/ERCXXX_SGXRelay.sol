@@ -12,7 +12,7 @@ import "./ERCXXX_SGX.sol";
 
 
 
-contract ERCXXX_SGXRelay is ERCXXX_SGXRelay_Interface, ERCXXX_SGX {
+contract ERCXXX_SGXRelay is ERCXXX_SGX("BTC-ERC-Relay", "BTH", 1), ERCXXX_SGXRelay_Interface {
     using SafeMath for uint256;
 
     // #####################
@@ -34,24 +34,9 @@ contract ERCXXX_SGXRelay is ERCXXX_SGXRelay_Interface, ERCXXX_SGX {
     // #####################
     // CONSTRUCTOR
     // #####################
-    constructor(string _name, string _symbol, uint256 _granularity) public {
-        require(_granularity >= 1);
-
-        name = _name;
-        symbol = _symbol;
-        granularity = _granularity;
-
-        totalSupply = 0;
-        // TODO: value
-        contestationPeriod = 1;
-        // TODO: value
-        graceRedeemPeriod = 1;
+    constructor() public {
         // Collateral required since we don't trust the issuer
         minimumCollateral = 1;
-        // Minimum Ether to be commited by user for issuing of tokens
-        minimumCollateralCommitment = 1;
-        issuerTokenSupply = 0;
-        issuerCommitedTokens = 0;
     }
 
     function pendingRedeemRequests() public view returns(uint256[]) {
@@ -79,10 +64,10 @@ contract ERCXXX_SGXRelay is ERCXXX_SGXRelay_Interface, ERCXXX_SGX {
 
     function issue(address receiver, uint256 amount, bytes data) public {
         /* This method can only be called by a BTC relay */
+
+        // Should be the SGX relay, but does not matter for now
         address btcrelay;
         require(msg.sender == btcrelay);
-
-
 
         balances[receiver] += amount;
         emit Issue(msg.sender, receiver, amount, data);

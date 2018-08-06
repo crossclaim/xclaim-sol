@@ -1,12 +1,11 @@
 pragma solidity ^0.4.24;
 
-import "./ERCXXX_Interface.sol";
-import "./ERCXXX_Tribunal_Interface.sol";
+import "./ERCXXX_Base_Interface.sol";
 
 /**
 * ERCXXX using SGX relays Interface
 */
-contract ERCXXX_SGXRelay_Interface is ERCXXX_Interface, ERCXXX_Tribunal_Interface {
+contract ERCXXX_SGXRelay_Interface is ERCXXX_Base_Interface {
 
     // #####################
     // CONTRACT VARIABLES
@@ -27,6 +26,7 @@ contract ERCXXX_SGXRelay_Interface is ERCXXX_Interface, ERCXXX_Tribunal_Interfac
     // FUNCTIONS
     // #####################
 
+    function pendingRedeemRequests() public view returns(uint256[]);
 
     /**
     * Registers / unlists a new relayer
@@ -37,8 +37,6 @@ contract ERCXXX_SGXRelay_Interface is ERCXXX_Interface, ERCXXX_Tribunal_Interfac
     */
     function authorizeRelayer(address toRegister, bytes data) public;
     function revokeRelayer(address toUnlist, bytes data) public;
-
-    function pendingRedeemRequests() public view returns(uint256[]);
 
 
     event RedeemSuccess(address indexed redeemer, uint256 id);
