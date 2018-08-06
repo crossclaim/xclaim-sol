@@ -58,4 +58,14 @@ contract ERCXXX_SGXRelay_Interface is ERCXXX_Base_Interface {
     * @param id - ID of the redeeem request
     */
     event Redeem(address indexed redeemer, address indexed issuer, uint value, bytes data, uint id);
+
+    event Reimburse(address indexed redeemer, address indexed issuer, uint value);
+
+    event RequestReplace(address indexed issuer, uint256 amount);
+
+    event LockReplace(address indexed candidate, uint256 amount);
+
+    event Replace(address indexed new_issuer, uint256 amount);
+
+    event AbortReplace(address indexed candidate, uint256 amount);
 }
