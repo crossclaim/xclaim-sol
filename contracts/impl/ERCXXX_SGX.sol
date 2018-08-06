@@ -48,6 +48,15 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
     /* This can be enriched to allow multiple requests per user, but it's not of huge importance at the moment */
     mapping(address => CommitedCollateral) userCommitedCollateral;
 
+    struct HTLC {
+        uint256 locktime;
+        uint256 amount;
+        bytes32 script;
+        bytes32 siganture;
+        bytes32 tx_id;
+    }
+    mapping(address => HTLC) userHTLC;
+
     struct TradeOffer {
         address tokenParty;
         address ethParty;
@@ -145,29 +154,80 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         emit RevokedIssuer(toUnlist);
     }
 
+    // #####################
+    // ISSUE
+    // #####################
+
     function registerIssue(uint256 amount) public payable {
         require(msg.value >= minimumCollateralCommitment);
         /* If there is not enough tokens, return back the collateral */
-        if (issuerTokenSupply < amount + issuerCommitedTokens) { // TODO might need a 3rd variable here
-            msg.sender.transfer(msg.value);
-            return;
-        }
-        uint256 timelock = now + 1 days;
+        // Not required in case of centralised SGX issuer
+        // if (issuerTokenSupply < amount + issuerCommitedTokens) { // TODO might need a 3rd variable here
+        //     msg.sender.transfer(msg.value);
+        //     return;
+        // }
+        uint8 issueType = 0;
+
+        uint256 timelock = now + 1 seconds;
         issuerCommitedTokens += amount;
         userCommitedCollateral[msg.sender] = CommitedCollateral(timelock, amount);
         // emit event
-        emit RegisterIssue(msg.sender, amount, timelock);
+        emit RegisterIssue(msg.sender, amount, timelock, issueType);
     }
 
-    function issue(address receiver, uint256 amount, bytes data) public {
+    function issueCol(address receiver, uint256 amount, bytes data) public {
+        // TODO: data is not required in the SGX centralised case
         /* This method can only be called by an Issuer */
         require(msg.sender == issuer);
 
-        totalSupply += amount;
-        balances[receiver] += amount;
+        if (data.length != 0) {
+            // issue tokens
+            totalSupply += amount;
+            balances[receiver] += amount;
 
-        emit Issue(msg.sender, receiver, amount, data);
+            emit Issue(msg.sender, receiver, amount, data);
+            return;
+        } else {
+            // abort issue
+            issuerCommitedTokens -= amount;
+            userCommitedCollateral[msg.sender] = CommitedCollateral(0,0);
+
+            emit AbortIssue(msg.sender, receiver, amount, data);
+            return;
+        }
     }
+
+    function registerHTLC(uint256 timelock, uint256 amount, bytes32 script, bytes32 signature, bytes32 data) public {
+        userHTLC[msg.sender] = HTLC(timelock, amount, script, signature, data);
+        uint8 issueType = 1;
+
+        emit RegisterIssue(msg.sender, amount, timelock, issueType);
+    }
+
+    function issueHTLC(address receiver, uint256 amount, bytes data) public {
+        // TODO: data is not required in the SGX centralised case
+        /* This method can only be called by an Issuer */
+        // This method is only called by the issuer during the timelock
+        require(msg.sender == issuer); 
+        if (data.length != 0) {
+            // issue tokens
+            totalSupply += amount;
+            balances[receiver] += amount;
+
+            emit Issue(msg.sender, receiver, amount, data);
+            return;
+        } else {
+            // abort issue
+
+            emit AbortIssue(msg.sender, receiver, amount, data);
+            return;
+        }
+
+    }
+
+    // #####################
+    // TRADE
+    // #####################
 
     /* Call this method to make a transfer offer to another party */
     function offerTrade(uint256 tokenAmount, uint256 ethAmount, address ethParty) public {
@@ -198,7 +258,13 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         emit Transfer(sender, receiver, amount);
     }
 
+    // #####################
+    // REDEEM
+    // #####################
+
+
     function redeem(address redeemer, uint256 amount, bytes data) public {
+        // No failed state in centrlaised SGX
         /* This method can only be called by an Issuer */
         require(msg.sender == issuer);
 
@@ -210,10 +276,9 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         emit Redeem(redeemer, msg.sender, amount, data);
     }
 
-    function verifyHTLC() public {
-        // TODO: store bytes
-        // signature
-        // locktime
-        // script
-    }
+    // #####################
+    // REPLACE
+    // #####################
+
+    // Skip for centralised SGX
 }

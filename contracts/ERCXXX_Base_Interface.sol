@@ -112,7 +112,11 @@ contract ERCXXX_Base_Interface {
     *
     * ASSERT: msg.sender in relayer list, abort otherwise.
     */
-    function issue(address receiver, uint256 amount, bytes data) public;
+    function issueCol(address receiver, uint256 amount, bytes data) public;
+
+    function registerHTLC(uint256 locktime, uint256 amount, bytes32 script, bytes32 signature, bytes32 data) public;
+
+    function issueHTLC(address receiver, uint256 amount, bytes data) public;
 
     /**
     * Offer a trade of tokens for ether.
@@ -167,6 +171,7 @@ contract ERCXXX_Base_Interface {
 
     event RevokedIssuer(address indexed issuer);
 
+    event RegisterIssue(address indexed sender, uint256 value, uint256 timelock, uint8 issueType);
     /**
     * Issue event:
     * @param issuer - ETH address of the issuer
@@ -176,7 +181,8 @@ contract ERCXXX_Base_Interface {
     */
     event Issue(address indexed issuer, address indexed receiver, uint value, bytes data);
 
-    event RegisterIssue(address indexed sender, uint256 value, uint256 timelock);
+    event AbortIssue(address indexed issuer, address indexed receiver, uint value, bytes data);
+
     /**
     * Transfer event:
     * @param sender - ETH address of the sender
