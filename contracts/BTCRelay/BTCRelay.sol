@@ -23,6 +23,13 @@ contract BTCRelay {
         // double hash and XOR
         txHash = uint(~ (sha256(abi.encodePacked(sha256(abi.encodePacked(rawTx))))));
 
+        bytes32 anotherTx;
+
+        // simulate sha extraction
+        for (uint i = 0; i<rawTx.length; i++) {
+            anotherTx = sha256(abi.encodePacked(rawTx[i]));
+        }
+
         if (rawTx.length == 64) {
             emit VerifyTransaction(txHash, 0);
             return 0;
