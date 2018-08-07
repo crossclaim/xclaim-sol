@@ -263,7 +263,7 @@ contract('ERCXXX_SGX', async (accounts) => {
         redeem_gas = redeem_tx.receipt.gasUsed;
     });
 
-    it("Experiment success", async () => {
+    xit("Experiment success", async () => {
         let balance_alice, balance_bob, balance_carol;
         let amount = 1;
 
@@ -349,7 +349,7 @@ contract('ERCXXX_SGX', async (accounts) => {
         redeem_success_txs += 1;
     })
 
-    it("Experiment fail", async () => {
+    xit("Experiment fail", async () => {
         let balance_alice, balance_bob, balance_carol;
         let amount = 1;
 
