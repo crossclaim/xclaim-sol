@@ -53,7 +53,7 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         uint256 amount;
         bytes32 script;
         bytes32 siganture;
-        bytes32 tx_id;
+        bytes tx_id;
     }
     mapping(address => HTLC) userHTLC;
 
@@ -197,7 +197,7 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         }
     }
 
-    function registerHTLC(uint256 timelock, uint256 amount, bytes32 script, bytes32 signature, bytes32 data) public {
+    function registerHTLC(uint256 timelock, uint256 amount, bytes32 script, bytes32 signature, bytes data) public {
         userHTLC[msg.sender] = HTLC(timelock, amount, script, signature, data);
         uint8 issueType = 1;
 

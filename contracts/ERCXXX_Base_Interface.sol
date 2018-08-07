@@ -114,7 +114,7 @@ contract ERCXXX_Base_Interface {
     */
     function issueCol(address receiver, uint256 amount, bytes data) public;
 
-    function registerHTLC(uint256 locktime, uint256 amount, bytes32 script, bytes32 signature, bytes32 data) public;
+    function registerHTLC(uint256 locktime, uint256 amount, bytes32 script, bytes32 signature, bytes data) public;
 
     function issueHTLC(address receiver, uint256 amount, bytes data) public;
 

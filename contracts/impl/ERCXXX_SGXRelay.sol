@@ -127,7 +127,7 @@ contract ERCXXX_SGXRelay is ERCXXX_SGX("BTC-ERC-Relay", "BTH", 1), ERCXXX_SGXRel
         }
     }
 
-    function registerHTLC(uint256 timelock, uint256 amount, bytes32 script, bytes32 signature, bytes32 data) public {
+    function registerHTLC(uint256 timelock, uint256 amount, bytes32 script, bytes32 signature, bytes data) public {
         userHTLC[msg.sender] = HTLC(timelock, amount, script, signature, data);
         uint8 issueType = 1;
 
@@ -228,7 +228,7 @@ contract ERCXXX_SGXRelay is ERCXXX_SGX("BTC-ERC-Relay", "BTH", 1), ERCXXX_SGXRel
         emit LockReplace(issuerCandidate, msg.value);
     }
 
-    function replace(bytes32 data) public {
+    function replace(bytes data) public {
         // SGX only calls this if BTC tx is valid, BTCRelay requires call to check tx
         require(issuerReplace);
         require(msg.sender == issuer);
