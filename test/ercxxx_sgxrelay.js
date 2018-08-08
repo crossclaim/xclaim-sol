@@ -13,7 +13,7 @@ contract('ERCXXX_SGXRelay', async (accounts) => {
     /* For testing and experiments the following roles apply: */
     const issuer = accounts[0];
     const relayer = accounts[1];
-    const collateral = 1;
+    const collateral = 0.01;
     const alice = accounts[2];
     const bob = accounts[3];
     const carol = accounts[4];
@@ -107,12 +107,12 @@ contract('ERCXXX_SGXRelay', async (accounts) => {
     })
 
     beforeEach('setup contract', async function () {
-        btc_erc = await ERCXXX_SGXRelay.new();
+        btc_erc = await ERCXXX_SGXRelay.deployed();
     });
 
-    xit("Experiment success", async () => {
+    it("Experiment success", async () => {
         let balance_alice, balance_bob, balance_carol;
-        let amount = 1;
+        let amount = 0.01;
 
         // #### SETUP #####
         // check if authorize event fired
@@ -238,9 +238,9 @@ contract('ERCXXX_SGXRelay', async (accounts) => {
         assert.equal(current_issuer, eve, "SUCCESS: Did not make Eve the issuer")
     })
 
-    xit("Experiment fail", async () => {
+    it("Experiment fail", async () => {
         let balance_alice, balance_bob, balance_carol;
-        let amount = 1;
+        let amount = 0.01;
 
         // #### SETUP #####
         // check if authorize event fired

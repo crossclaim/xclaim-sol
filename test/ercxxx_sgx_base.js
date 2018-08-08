@@ -93,7 +93,7 @@ contract('ERCXXX_SGX', async (accounts) => {
     })
 
     beforeEach('setup contract', async function () {
-        btc_erc = await ERCXXX_SGX.new("BTC-ERC", "BTH", 1);
+        btc_erc = await ERCXXX_SGX.deployed();
     });
 
     xit("Authorize issuer", async () => {
@@ -242,7 +242,7 @@ contract('ERCXXX_SGX', async (accounts) => {
 
     xit("Redeem tokens", async () => {
         let balance_alice;
-        let amount = 1;
+        let amount = 0.01;
 
         // check if authorize event fired
         let authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(collateral, "ether") });
@@ -263,9 +263,9 @@ contract('ERCXXX_SGX', async (accounts) => {
         redeem_gas = redeem_tx.receipt.gasUsed;
     });
 
-    xit("Experiment success", async () => {
+    it("Experiment success", async () => {
         let balance_alice, balance_bob, balance_carol;
-        let amount = 1;
+        let amount = 0.01;
 
         // #### SETUP #####
         // check if authorize event fired
@@ -349,9 +349,9 @@ contract('ERCXXX_SGX', async (accounts) => {
         redeem_success_txs += 1;
     })
 
-    xit("Experiment fail", async () => {
+    it("Experiment fail", async () => {
         let balance_alice, balance_bob, balance_carol;
-        let amount = 1;
+        let amount = 0.01;
 
         // #### SETUP #####
         // check if authorize event fired

@@ -14,7 +14,7 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
     /* For testing and experiments the following roles apply: */
     const issuer = accounts[0];
     const relayer = accounts[1];
-    const collateral = 1;
+    const collateral = 0.01;
     const alice = accounts[2];
     const bob = accounts[3];
     const carol = accounts[4];
@@ -109,13 +109,13 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
     })
 
     beforeEach('setup contract', async function () {
-        btc_relay = await BTCRelay.new();
-        btc_erc = await ERCXXX_BTCRelay.new(btc_relay.address);
+        btc_relay = await BTCRelay.deployed();
+        btc_erc = await ERCXXX_BTCRelay.deployed();
     });
 
     it("Experiment success", async () => {
         let balance_alice, balance_bob, balance_carol;
-        let amount = 1;
+        let amount = 0.01;
 
         // #### SETUP #####
         // check if authorize event fired

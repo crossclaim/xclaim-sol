@@ -28,7 +28,7 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
     /* TODO: work out a value for minimum collateral */
     uint256 public minimumCollateral;
     /* Commitment by user for issuing of tokens */
-    uint256 public minimumCollateralCommitment = 1;
+    uint256 public minimumCollateralCommitment = 0.01 ether;
 
     mapping(address => uint) public balances;
 

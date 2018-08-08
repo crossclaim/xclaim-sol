@@ -41,7 +41,7 @@ contract ERCXXX_SGXRelay is ERCXXX_SGX("BTC-ERC-Relay", "BTH", 1), ERCXXX_SGXRel
     // #####################
     constructor() public {
         // Collateral required since we don't trust the issuer
-        minimumCollateral = 1 ether;
+        minimumCollateral = 0.01 ether;
     }
 
     function authorizeIssuer(address toRegister) public payable {
