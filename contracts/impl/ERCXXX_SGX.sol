@@ -7,16 +7,15 @@ pragma solidity ^0.4.24;
 ///  This contract does not define any standard, but can be taken as a reference
 ///  implementation in case of any ambiguity into the standard
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "../ERCXXX_Base_Interface.sol";
+import "./ERCXXX_Base.sol";
 
 
-contract ERCXXX_SGX is ERCXXX_Base_Interface {
+contract ERCXXX_SGX is ERCXXX_Base {
     using SafeMath for uint256;
 
     // #####################
     // CONTRACT VARIABLES
     // #####################
-
 
     string public name;
     string public symbol;
@@ -123,13 +122,17 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         return granularity;
     }
 
+    function issuer() public view returns(address) {
+        return issuer;
+    }
+
     // #####################
     // FUNCTIONS
     // #####################
 
-    function issuer() public view returns(address) {
-        return issuer;
-    }
+    // ---------------------
+    // SETUP
+    // ---------------------
 
     function authorizeIssuer(address toRegister) public payable {
         require(msg.value >= minimumCollateral);
@@ -141,12 +144,6 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         emit AuthorizedIssuer(toRegister, msg.value);
     }
 
-    function convertEthToBtc(uint256 eth) private pure returns(uint256) {
-        /* TODO use a contract that uses middleware to get the conversion rate */
-        uint256 conversionRate = 2;
-        return eth * conversionRate;
-    }
-
     function revokeIssuer(address toUnlist) private {
         /* TODO add checks on who calls this */
         /* TODO return collateral to issuer */
@@ -154,9 +151,9 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         emit RevokedIssuer(toUnlist);
     }
 
-    // #####################
+    // ---------------------
     // ISSUE
-    // #####################
+    // ---------------------
 
     function registerIssue(uint256 amount) public payable {
         require(msg.value >= minimumCollateralCommitment);
@@ -175,24 +172,24 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         emit RegisterIssue(msg.sender, amount, timelock, issueType);
     }
 
-    function issueCol(address receiver, uint256 amount, bytes data) public {
+    function issueCol(address receiver, uint256 amount, bytes lock_tx) public {
         // TODO: data is not required in the SGX centralised case
         /* This method can only be called by an Issuer */
         require(msg.sender == issuer);
 
-        if (data.length != 0) {
+        if (lock_tx.length != 0) {
             // issue tokens
             totalSupply += amount;
             balances[receiver] += amount;
 
-            emit Issue(msg.sender, receiver, amount, data);
+            emit Issue(msg.sender, receiver, amount, lock_tx);
             return;
         } else {
             // abort issue
             issuerCommitedTokens -= amount;
             userCommitedCollateral[msg.sender] = CommitedCollateral(0,0);
 
-            emit AbortIssue(msg.sender, receiver, amount, data);
+            emit AbortIssue(msg.sender, receiver, amount, lock_tx);
             return;
         }
     }
@@ -204,38 +201,38 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         emit RegisterIssue(msg.sender, amount, timelock, issueType);
     }
 
-    function issueHTLC(address receiver, uint256 amount, bytes data) public {
+    function issueHTLC(address receiver, uint256 amount, bytes lock_tx) public {
         // TODO: data is not required in the SGX centralised case
         /* This method can only be called by an Issuer */
         // This method is only called by the issuer during the timelock
         require(msg.sender == issuer); 
-        if (data.length != 0) {
+        if (lock_tx.length != 0) {
             // issue tokens
             totalSupply += amount;
             balances[receiver] += amount;
 
-            emit Issue(msg.sender, receiver, amount, data);
+            emit Issue(msg.sender, receiver, amount, lock_tx);
             return;
         } else {
             // abort issue
-
-            emit AbortIssue(msg.sender, receiver, amount, data);
+            emit AbortIssue(msg.sender, receiver, amount, lock_tx);
             return;
         }
 
     }
 
-    // #####################
+    // ---------------------
     // TRADE
-    // #####################
+    // ---------------------
 
     /* Call this method to make a transfer offer to another party */
     function offerTrade(uint256 tokenAmount, uint256 ethAmount, address ethParty) public {
         require(balances[msg.sender] >= tokenAmount);
         balances[msg.sender] -= tokenAmount;
         tradeOfferStore[tradeOfferId] = TradeOffer(msg.sender, ethParty, tokenAmount, ethAmount, false);
-        emit NewTradeOffer(tradeOfferId, msg.sender, tokenAmount, ethParty, ethAmount);
+        
         tradeOfferId += 1;
+        emit NewTradeOffer(tradeOfferId, msg.sender, tokenAmount, ethParty, ethAmount);
     }
 
     /* Call this method to accept a transfer offer made by another party */
@@ -248,6 +245,7 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         tradeOfferStore[offerId].completed = true;
         balances[msg.sender] = balances[msg.sender] + tradeOfferStore[offerId].tokenAmount;
         tradeOfferStore[offerId].tokenParty.transfer(msg.value);
+
         emit Trade(offerId, tradeOfferStore[offerId].tokenParty, tradeOfferStore[offerId].tokenAmount, msg.sender, msg.value);
     }
 
@@ -255,15 +253,16 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
         require(balances[sender] >= amount);
         balances[sender] = balances[sender] - amount;
         balances[receiver] = balances[receiver] + amount;
+
         emit Transfer(sender, receiver, amount);
     }
 
-    // #####################
+    // ---------------------
     // REDEEM
-    // #####################
+    // ---------------------
 
 
-    function redeem(address redeemer, uint256 amount, bytes data) public {
+    function redeem(address redeemer, uint256 amount, bytes redeem_tx) public {
         // No failed state in centrlaised SGX
         /* This method can only be called by an Issuer */
         require(msg.sender == issuer);
@@ -273,12 +272,23 @@ contract ERCXXX_SGX is ERCXXX_Base_Interface {
 
         totalSupply -= amount;
         balances[redeemer] -= amount;
-        emit Redeem(redeemer, msg.sender, amount, data);
+        emit Redeem(redeemer, msg.sender, amount, redeem_tx);
     }
 
-    // #####################
+    // ---------------------
     // REPLACE
-    // #####################
+    // ---------------------
 
     // Skip for centralised SGX
+
+    // ---------------------
+    // Helpers
+    // ---------------------
+
+    function convertEthToBtc(uint256 eth) private pure returns(uint256) {
+        /* TODO use a contract that uses middleware to get the conversion rate */
+        uint256 conversionRate = 2;
+        return eth * conversionRate;
+    }
+
 }

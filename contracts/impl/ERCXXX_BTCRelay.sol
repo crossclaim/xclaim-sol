@@ -234,11 +234,12 @@ contract ERCXXX_BTCRelay is ERCXXX_SGXRelay {
         emit AbortReplace(issuerCandidate, issuerCollateral);
     }
 
-    function verifyHTLC() public {
+    function verifyHTLC() public pure returns (bool) {
         // TODO: store bytes
         // signature
         // locktime
         // script
+        return true;
     }
 
     function verifyTx(bytes data) private returns (bool verified) {

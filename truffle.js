@@ -1,6 +1,6 @@
 var HDWalletProvider = require("truffle-hdwallet-provider");
 
-var infura_apikey = "xxx";
+var infura_apikey = "a311240a97d84b93b201e772187be620";
 var mnemonic = "xxx";
 
 module.exports = {
@@ -10,7 +10,7 @@ module.exports = {
     development: {
       host: "localhost",
       port: 8545,
-      network_id: "*" // Match any network id
+      network_id: "*", // Match any network id
     },
     ropsten: {
       network_id: 3,

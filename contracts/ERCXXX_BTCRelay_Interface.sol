@@ -1,26 +1,18 @@
 pragma solidity ^0.4.24;
 
-import "./ERCXXX_Interface.sol";
+import "./ERCXXX_Base_Interface.sol";
 import "./ERCXXX_Tribunal_Interface.sol";
 
 /**
 * ERCXXX using BTCRelay Interface
 */
-contract ERCXXX_BTCRelay_Interface is ERCXXX_Interface, ERCXXX_Tribunal_Interface {
+contract ERCXXX_BTCRelay_Interface is ERCXXX_Base_Interface, ERCXXX_Tribunal_Interface {
 
     // #####################
     // CONTRACT VARIABLES
     // #####################
 
-    /**
-    * Address of the relay contract for the backed cryptocurrency
-    */
-    address public relayContract;
-
-
-    // #####################
-    // MODIFIERS
-    // #####################
+    function relayer() public view returns (address);
 
     // #####################
     // FUNCTIONS

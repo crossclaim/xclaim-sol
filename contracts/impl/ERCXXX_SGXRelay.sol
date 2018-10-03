@@ -254,13 +254,6 @@ contract ERCXXX_SGXRelay is ERCXXX_SGX("BTC-ERC-Relay", "BTH", 1), ERCXXX_SGXRel
         emit AbortReplace(issuerCandidate, issuerCollateral);
     }
 
-    function verifyHTLC() public {
-        // TODO: store bytes
-        // signature
-        // locktime
-        // script
-    }
-
     function convertEthToBtc(uint256 eth) private pure returns(uint256) {
         /* TODO use a contract that uses middleware to get the conversion rate */
         uint256 conversionRate = 2;

@@ -6,14 +6,6 @@ pragma solidity ^0.4.24;
 contract ERCXXX_Tribunal_Interface {
 
     // #####################
-    // CONTRACT VARIABLES
-    // #####################
-
-    // #####################
-    // MODIFIERS
-    // #####################
-
-    // #####################
     // FUNCTIONS
     // #####################
 
@@ -33,11 +25,6 @@ contract ERCXXX_Tribunal_Interface {
     * ASSERT: callable only by issuers
     */
     function rebut(uint id, bytes data) public;
-
-
-    // #####################
-    // HELPER FUNCTIONS
-    // #####################
 
 
     // #####################
