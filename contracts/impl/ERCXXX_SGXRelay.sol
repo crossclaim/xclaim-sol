@@ -28,7 +28,11 @@ contract ERCXXX_SGXRelay is ERCXXX_Base("BTC-SGX-Relay", "BTH", 1) {
         _minimumCollateralIssuer = 1 wei;
     }
 
+    // ---------------------
+    // SETUP
+    // ---------------------
 
+    // Relayers
     function authorizeRelayer(address toRegister) public {
         /* TODO: who authroizes this? */
         // Do we need the data argument?
@@ -40,9 +44,9 @@ contract ERCXXX_SGXRelay is ERCXXX_Base("BTC-SGX-Relay", "BTH", 1) {
         emit AuthorizeRelayer(toRegister, data);
     }
 
-    // #####################
+    // ---------------------
     // ISSUE
-    // #####################
+    // ---------------------
 
     function registerIssue(uint256 amount) public payable {
         require(msg.value >= minimumCollateralCommitment);
@@ -116,13 +120,13 @@ contract ERCXXX_SGXRelay is ERCXXX_Base("BTC-SGX-Relay", "BTH", 1) {
 
     }
 
-    // #####################
+    // ---------------------
     // TRADE
-    // #####################
+    // ---------------------
 
-    // #####################
+    // ---------------------
     // REDEEM
-    // #####################
+    // ---------------------
 
 
     function redeem(address redeemer, uint256 amount, bytes data) public {

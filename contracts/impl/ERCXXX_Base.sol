@@ -166,8 +166,8 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
 
         emit RevokedIssuer(toUnlist);
     }
+
     // Relayers
-    
     // function authorizeRelayer in implementations
 
     function revokeRelayer(address toUnlist) public {
