@@ -28,27 +28,16 @@ contract ERCXXX_SGXRelay is ERCXXX_Base("BTC-SGX-Relay", "BTH", 1) {
         _minimumCollateralIssuer = 1 wei;
     }
 
-    function pendingRedeemRequests() public view returns(uint256[]) {
-        return redeemRequestList;
-    }
 
-    function authorizeRelayer(address toRegister, bytes data) public {
+    function authorizeRelayer(address toRegister) public {
         /* TODO: who authroizes this? */
         // Do we need the data argument?
         // Does the relayer need to provide collateral?
-        require(!relayer[toRegister]);
-        require(!relayer[msg.sender]);
+        require(_relayer == address(0));
+        require(msg.sender != _relayer);
 
-        relayer[toRegister] = true;
+        _relayer = toRegister;
         emit AuthorizeRelayer(toRegister, data);
-    }
-
-    function revokeRelayer(address toUnlist, bytes data) public {
-        require(relayer[toUnlist]);
-        require(relayer[msg.sender]);
-
-        relayer[toUnlist] = false;
-        emit RevokeRelayer(msg.sender, data);
     }
 
     // #####################

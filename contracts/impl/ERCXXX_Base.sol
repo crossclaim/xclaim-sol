@@ -168,6 +168,12 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
     }
     // Relayers
     
+    // function authorizeRelayer in implementations
+
+    function revokeRelayer(address toUnlist) public {
+        _relayer = address(0);
+        emit RevokeRelayer(relayer, data);
+    }
 
     // ---------------------
     // ISSUE

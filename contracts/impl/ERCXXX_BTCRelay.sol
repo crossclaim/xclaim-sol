@@ -21,37 +21,33 @@ contract ERCXXX_BTCRelay is ERCXXX_Base("BTC-ERC-Relay", "BTH", 1) {
 
     BTCRelay btcRelay;
 
-    constructor (address _btcRelay) public {
+    constructor () public {
         // issuer
         _issuerCollateral = 0;
         // collateral
         _minimumCollateralIssuer = 1 wei;
-        // relay
-        btcRelay = BTCRelay(_btcRelay);
-        _relayer = _btcRelay;
     }
 
-    // Not needed in that case
-    function authorizeRelayer(address toRegister, bytes data) public {
+    // ---------------------
+    // SETUP
+    // ---------------------
+
+    // Relayers
+    function authorizeRelayer(address toRegister) public {
         /* TODO: who authroizes this? */
         // Do we need the data argument?
         // Does the relayer need to provide collateral?
-        require(relayer == address(0));
-        require(msg.sender != relayer);
+        require(_relayer == address(0));
+        require(msg.sender != _relayer);
 
-        relayer = toRegister;
+        _relayer = toRegister;
+        btcRelay = BTCRelay(toRegister);
         emit AuthorizeRelayer(toRegister, data);
     }
 
-    // Not needed in that case
-    function revokeRelayer(address toUnlist, bytes data) public {
-        relayer = address(0);
-        emit RevokeRelayer(relayer, data);
-    }
-
-    // #####################
+    // ---------------------
     // ISSUE
-    // #####################
+    // ---------------------
 
     function registerIssue(uint256 amount) public payable {
         require(msg.value >= minimumCollateralCommitment);
@@ -132,13 +128,13 @@ contract ERCXXX_BTCRelay is ERCXXX_Base("BTC-ERC-Relay", "BTH", 1) {
 
     }
 
-    // #####################
+    // ---------------------
     // TRADE
-    // #####################
+    // ---------------------
 
-    // #####################
+    // ---------------------
     // REDEEM
-    // #####################
+    // ---------------------
 
 
     function redeem(address redeemer, uint256 amount, bytes data) public {
