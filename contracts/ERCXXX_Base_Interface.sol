@@ -27,6 +27,7 @@ contract ERCXXX_Base_Interface is ERC20_Interface {
     // NOTE: Most of the tokens SHOULD be fully partitionable, i.e. this function SHOULD return 1 unless there is a good reason for not allowing any partition of the token.
     function granularity() public view returns (uint256);
     function issuer() public view returns(address);
+    function pendingRedeemRequests() public view returns(uint256[]);
 
     // #####################
     // FUNCTIONS
@@ -52,6 +53,10 @@ contract ERCXXX_Base_Interface is ERC20_Interface {
     function authorizeIssuer(address toRegister) public payable;
 
     function revokeIssuer(address toUnlist) private;
+
+    function authorizeRelayer(address toRegister) public;
+
+    function revokeRelayer(address toUnlist) public;
 
     // ---------------------
     // ISSUE
@@ -110,7 +115,7 @@ contract ERCXXX_Base_Interface is ERC20_Interface {
     *
     * TODO: optional: add checks - is the first 'lock' TX still unspent and does this tx actually spend from the first 'lock' tx correctly. Will require call to relay.
     */
-    function redeem(address redeemer, uint256 amount, bytes redeem_tx) public;
+    function redeem(address redeemer, uint256 amount, bytes data) public;
 
     // #####################
     // EVENTS
@@ -125,6 +130,10 @@ contract ERCXXX_Base_Interface is ERC20_Interface {
     event AuthorizedIssuer(address indexed issuer, uint collateral);
 
     event RevokedIssuer(address indexed issuer);
+
+    event AuthorizedRelayer(address indexed relayer);
+
+    event RevokedRelayer(address indexed relayer);
 
     event RegisterIssue(address indexed sender, uint256 value, uint256 timelock, uint8 issueType);
     /**
