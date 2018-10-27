@@ -175,4 +175,8 @@ contract ERCXXX_Base_Interface is ERC20_Interface {
     */
     event Redeem(address indexed redeemer, address indexed issuer, uint value, bytes data);
 
-}
+    event RequestReplace(address indexed issuer, uint256 collateral);
+
+    event LockReplace(address indexed issuerCandidate, uint256 collateral);
+
+    event AbortReplace(address indexed issuerCandidate, uint256 collateral);

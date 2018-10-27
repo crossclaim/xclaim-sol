@@ -8,7 +8,7 @@ pragma solidity ^0.4.24;
 ///  implementation in case of any ambiguity into the standard
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../ERCXXX_Base_Interface.sol";
-import "ERC20.sol";
+import "./ERC20.sol";
 
 contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
     using SafeMath for uint256;
@@ -175,7 +175,7 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
 
     function revokeRelayer(address toUnlist) public {
         _relayer = address(0);
-        emit RevokedRelayer(relayer);
+        emit RevokedRelayer(_relayer);
     }
 
     // ---------------------
@@ -235,7 +235,7 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
         require(_balances[msg.sender] >= tokenAmount, "Insufficient balance");
 
         _balances[msg.sender] -= tokenAmount;
-        _tradeOfferStore[tradeOfferId] = TradeOffer(msg.sender, ethParty, tokenAmount, ethAmount, false);
+        _tradeOfferStore[_tradeOfferId] = TradeOffer(msg.sender, ethParty, tokenAmount, ethAmount, false);
         
         _tradeOfferId += 1;
         emit NewTradeOffer(_tradeOfferId, msg.sender, tokenAmount, ethParty, ethAmount);
