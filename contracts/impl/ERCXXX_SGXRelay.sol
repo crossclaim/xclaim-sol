@@ -41,7 +41,7 @@ contract ERCXXX_SGXRelay is ERCXXX_Base("BTC-SGX-Relay", "BTH", 1) {
         require(msg.sender != _relayer);
 
         _relayer = toRegister;
-        emit AuthorizeRelayer(toRegister, data);
+        emit AuthorizedRelayer(toRegister);
     }
 
     // ---------------------
@@ -58,15 +58,15 @@ contract ERCXXX_SGXRelay is ERCXXX_Base("BTC-SGX-Relay", "BTH", 1) {
         // SGX needs to verif this
         if (data.length != 0) {
             // issue tokens
-            totalSupply += amount;
-            balances[receiver] += amount;
+            _totalSupply += amount;
+            _balances[receiver] += amount;
 
             emit Issue(msg.sender, receiver, amount, data);
             return;
         } else {
             // abort issue
-            issuerCommitedTokens -= amount;
-            userCommitedCollateral[msg.sender] = CommitedCollateral(0,0);
+            _issuerCommitedTokens -= amount;
+            _userCommitedCollateral[msg.sender] = CommitedCollateral(0,0);
 
             emit AbortIssue(msg.sender, receiver, amount, data);
             return;
@@ -77,11 +77,11 @@ contract ERCXXX_SGXRelay is ERCXXX_Base("BTC-SGX-Relay", "BTH", 1) {
         // TODO: data is not required in the SGX centralised case
         /* This method can only be called by an Issuer */
         // This method is only called by the issuer during the timelock
-        require(relayer[msg.sender]); 
+        require(msg.sender == _relayer); 
         if (data.length != 0) {
             // issue tokens
-            totalSupply += amount;
-            balances[receiver] += amount;
+            _totalSupply += amount;
+            _balances[receiver] += amount;
 
             emit Issue(msg.sender, receiver, amount, data);
             return;
@@ -105,42 +105,42 @@ contract ERCXXX_SGXRelay is ERCXXX_Base("BTC-SGX-Relay", "BTH", 1) {
 
     function redeem(address redeemer, uint256 amount, bytes data) public {
         /* This method can only be called by a relayer */
-        require(relayer[msg.sender]);
+        require(msg.sender == _relayer);
 
         /* The redeemer must have enough tokens to burn */
-        require(balances[redeemer] >= amount);
+        require(_balances[redeemer] >= amount);
 
         // for testing
         uint256 time = 1 seconds;
 
-        redeemRequestId++;
-        redeemRequestList.push(redeemRequestId);
-        redeemRequestMapping[redeemRequestId] = RedeemRequest(redeemer, amount, (now + time));
+        _redeemRequestId++;
+        _redeemRequestList.push(_redeemRequestId);
+        _redeemRequestMapping[_redeemRequestId] = RedeemRequest(redeemer, amount, (now + time));
 
         // balances[redeemer] -= amount;
         // Update this to include ID
-        emit Redeem(redeemer, msg.sender, amount, data, redeemRequestId);
+        emit Redeem(redeemer, msg.sender, amount, data, _redeemRequestId);
     }
 
     function redeemConfirm(address redeemer, uint256 id) public {
-        require(redeemRequestMapping[id].redeemTime > now);
-        require(redeemRequestMapping[id].value <= balances[redeemer]);
+        require(_redeemRequestMapping[id].redeemTime > now);
+        require(_redeemRequestMapping[id].value <= _balances[redeemer]);
 
-        balances[redeemer] -= redeemRequestMapping[id].value;
-        totalSupply -= redeemRequestMapping[id].value;
+        _balances[redeemer] -= _redeemRequestMapping[id].value;
+        _totalSupply -= _redeemRequestMapping[id].value;
         emit RedeemSuccess(redeemer, id);
     }   
 
     function reimburse(address redeemer, uint256 id) public {
-        require(redeemRequestMapping[id].redeemTime < now);
-        require(msg.sender == redeemRequestMapping[id].redeemer);
+        require(_redeemRequestMapping[id].redeemTime < now);
+        require(msg.sender == _redeemRequestMapping[id].redeemer);
 
-        issuerCollateral -= redeemRequestMapping[id].value;
-        balances[redeemer] -= redeemRequestMapping[id].value;
+        _issuerCollateral -= _redeemRequestMapping[id].value;
+        _balances[redeemer] -= _redeemRequestMapping[id].value;
 
-        redeemer.transfer(redeemRequestMapping[id].value);
+        redeemer.transfer(_redeemRequestMapping[id].value);
         
-        emit Reimburse(redeemer, issuer, redeemRequestMapping[id].value);
+        emit Reimburse(redeemer, _issuer, _redeemRequestMapping[id].value);
     }
 
     // #####################
@@ -149,15 +149,15 @@ contract ERCXXX_SGXRelay is ERCXXX_Base("BTC-SGX-Relay", "BTH", 1) {
 
     function replace(bytes data) public {
         // SGX only calls this if BTC tx is valid, BTCRelay requires call to check tx
-        require(issuerReplace);
-        require(msg.sender == issuer);
-        require(issuerReplaceTimelock > now);
+        require(_issuerReplace);
+        require(msg.sender == _issuer);
+        require(_issuerReplaceTimelock > now);
 
-        issuer = issuerCandidate;
-        issuerCandidate = address(0);
-        issuerReplace = false;
-        issuer.transfer(issuerCollateral);
+        _issuer = _issuerCandidate;
+        _issuerCandidate = address(0);
+        _issuerReplace = false;
+        _issuer.transfer(_issuerCollateral);
 
-        emit Replace(issuerCandidate, issuerCollateral);
+        emit Replace(_issuerCandidate, _issuerCollateral);
     }
 }

@@ -18,39 +18,39 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
     // #####################
 
     // general
-    string private _name;
-    string private _symbol;
-    uint256 private _granularity;
+    string public _name;
+    string public _symbol;
+    uint256 public _granularity;
 
     // issuer
-    address private _issuer;
-    uint256 private _issuerTokenSupply; // token supply per issuer
-    uint256 private _issuerCommitedTokens; // token commited by issuer
-    uint256 private _issuerCollateral;
-    address private _issuerCandidate;
-    bool private _issuerReplace;
-    uint256 private _issuerReplaceTimelock;
+    address public _issuer;
+    uint256 public _issuerTokenSupply; // token supply per issuer
+    uint256 public _issuerCommitedTokens; // token commited by issuer
+    uint256 public _issuerCollateral;
+    address public _issuerCandidate;
+    bool public _issuerReplace;
+    uint256 public _issuerReplaceTimelock;
 
     // relayer
-    address private _relayer;
+    address public _relayer;
 
     // time
-    uint256 private _contestationPeriod;
-    uint256 private _graceRedeemPeriod;
+    uint256 public _contestationPeriod;
+    uint256 public _graceRedeemPeriod;
     
     // collateral
-    uint256 private _minimumCollateralIssuer;
-    uint256 private _minimumCollateralUser;
+    uint256 public _minimumCollateralIssuer;
+    uint256 public _minimumCollateralUser;
     
     // conversion rate
-    uint256 private _conversionRateBTCETH; // 10*5 granularity?
+    uint256 public _conversionRateBTCETH; // 10*5 granularity?
     
     // issue - collateral
     struct CommitedCollateral {
         uint256 commitTimeLimit;
         uint256 collateral;
     }
-    mapping(address => CommitedCollateral) private _userCommitedCollateral;
+    mapping(address => CommitedCollateral) public _userCommitedCollateral;
     
     // issue - HTLC
     struct HTLC {
@@ -60,7 +60,7 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
         bytes32 siganture;
         bytes tx_id;
     }
-    mapping(address => HTLC) private _userHTLC;
+    mapping(address => HTLC) public _userHTLC;
     
     // trade
     struct TradeOffer {
@@ -70,8 +70,8 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
         uint256 ethAmount;
         bool completed;
     }
-    mapping(uint256 => TradeOffer) private _tradeOfferStore;
-    uint256 private _tradeOfferId; //todo: do we need this?
+    mapping(uint256 => TradeOffer) public _tradeOfferStore;
+    uint256 public _tradeOfferId; //todo: do we need this?
 
     // redeem
     struct RedeemRequest {
@@ -79,9 +79,9 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
         uint value;
         uint redeemTime;
     }
-    mapping(uint => RedeemRequest) private _redeemRequestMapping;
-    uint256[] private _redeemRequestList;
-    uint256 private _redeemRequestId;
+    mapping(uint => RedeemRequest) public _redeemRequestMapping;
+    uint256[] public _redeemRequestList;
+    uint256 public _redeemRequestId;
 
     constructor (string myname, string mysymbol, uint256 mygranularity) public {
         _name = myname;
@@ -260,7 +260,7 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
 
     // Individual implementation
     function redeem(address redeemer, uint256 amount, bytes data) public {
-        emit Redeem(redeemer, msg.sender, amount, data);
+        emit Redeem(redeemer, msg.sender, amount, data, 0);
     }
 
     // ---------------------
@@ -306,7 +306,7 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
     // HELPERS
     // ---------------------
 
-    function _convertEthToBtc(uint256 eth) private pure returns(uint256) {
+    function _convertEthToBtc(uint256 eth) private view returns(uint256) {
         /* TODO use a contract that uses middleware to get the conversion rate */
         return eth * _conversionRateBTCETH;
     }

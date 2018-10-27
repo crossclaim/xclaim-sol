@@ -108,7 +108,7 @@ contract ERCXXX_Base_Interface is ERC20_Interface {
     * Initiates the redeeming of backed-tokens in the native cryptocurrency. Redeemed tokens are 'burned' in the process.
     * @param redeemer - redeemer address
     * id of the token struct to be redeemed (and hence burned)
-    * @param redeem_tx - data, contains the 'redeem' transaction to be signed by the issuer
+    * @param data - data, contains the 'redeem' transaction to be signed by the issuer
     *
     * ASSERT:
     * -) redeemer actually owns the given amount of tokens (including transaction fees in the native blockchain)
@@ -173,11 +173,17 @@ contract ERCXXX_Base_Interface is ERC20_Interface {
     * @param value - number of tokens to be redeemed (and hence burned)
     * @param data - data, contains 'redeem' transaction (to be signed by the issuer)
     */
-    event Redeem(address indexed redeemer, address indexed issuer, uint value, bytes data);
+    event Redeem(address indexed redeemer, address indexed issuer, uint value, bytes data, uint id);
 
-    event RequestReplace(address indexed issuer, uint256 collateral);
+    event RedeemSuccess(address indexed redeemer, uint256 id);
+    
+    event Reimburse(address indexed redeemer, address indexed issuer, uint value);
 
-    event LockReplace(address indexed issuerCandidate, uint256 collateral);
+    event RequestReplace(address indexed issuer, uint256 amount);
 
-    event AbortReplace(address indexed issuerCandidate, uint256 collateral);
+    event LockReplace(address indexed candidate, uint256 amount);
+
+    event Replace(address indexed new_issuer, uint256 amount);
+
+    event AbortReplace(address indexed candidate, uint256 amount);
 }

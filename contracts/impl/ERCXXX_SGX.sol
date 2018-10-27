@@ -46,15 +46,15 @@ contract ERCXXX_SGX is ERCXXX_Base("BTC-SGX", "BTH", 1) {
 
         if (lock_tx.length != 0) {
             // issue tokens
-            totalSupply += amount;
-            balances[receiver] += amount;
+            _totalSupply += amount;
+            _balances[receiver] += amount;
 
             emit Issue(msg.sender, receiver, amount, lock_tx);
             return;
         } else {
             // abort issue
-            issuerCommitedTokens -= amount;
-            userCommitedCollateral[msg.sender] = CommitedCollateral(0,0);
+            _issuerCommitedTokens -= amount;
+            _userCommitedCollateral[msg.sender] = CommitedCollateral(0,0);
 
             emit AbortIssue(msg.sender, receiver, amount, lock_tx);
             return;
@@ -65,11 +65,11 @@ contract ERCXXX_SGX is ERCXXX_Base("BTC-SGX", "BTH", 1) {
         // TODO: data is not required in the SGX centralised case
         /* This method can only be called by an Issuer */
         // This method is only called by the issuer during the timelock
-        require(msg.sender == issuer); 
+        require(msg.sender == _issuer); 
         if (lock_tx.length != 0) {
             // issue tokens
-            totalSupply += amount;
-            balances[receiver] += amount;
+            _totalSupply += amount;
+            _balances[receiver] += amount;
 
             emit Issue(msg.sender, receiver, amount, lock_tx);
             return;
@@ -92,14 +92,14 @@ contract ERCXXX_SGX is ERCXXX_Base("BTC-SGX", "BTH", 1) {
     function redeem(address redeemer, uint256 amount, bytes redeem_tx) public {
         // No failed state in centralised SGX
         /* This method can only be called by an Issuer */
-        require(msg.sender == issuer);
+        require(msg.sender == _issuer);
 
         /* The redeemer must have enough tokens to burn */
-        require(balances[redeemer] >= amount);
+        require(_balances[redeemer] >= amount);
 
-        totalSupply -= amount;
-        balances[redeemer] -= amount;
-        emit Redeem(redeemer, msg.sender, amount, redeem_tx);
+        _totalSupply -= amount;
+        _balances[redeemer] -= amount;
+        emit Redeem(redeemer, msg.sender, amount, redeem_tx, 0);
     }
 
     // ---------------------

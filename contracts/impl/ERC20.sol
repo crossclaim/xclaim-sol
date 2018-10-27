@@ -16,9 +16,9 @@ contract ERC20 is ERC20_Interface {
     // CONTRACT VARIABLES
     // #####################
 
-    mapping (address => uint256) private _balances;
-    mapping (address => mapping (address => uint256)) private _allowed;
-    uint256 private _totalSupply;
+    mapping (address => uint256) public _balances;
+    mapping (address => mapping (address => uint256)) public _allowed;
+    uint256 public _totalSupply;
 
     function totalSupply() public view returns (uint256) {
         return _totalSupply;
