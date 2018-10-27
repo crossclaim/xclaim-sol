@@ -35,6 +35,9 @@ contract ERCXXX_Base_Interface is ERC20_Interface {
     // ---------------------
     // SETUP
     // ---------------------
+    function getEthtoBtcConversion() public returns (uint256);
+
+    function setEthtoBtcConversion(uint256 rate) public;
 
     /**
     * Registers / unlists a new issuer
@@ -143,6 +146,7 @@ contract ERCXXX_Base_Interface is ERC20_Interface {
     */
     event Transfer(address indexed sender, address indexed receiver, uint value);
 
+    event NewTradeOffer(uint256 id, address indexed tokenParty, uint256 tokenAmount, address indexed ethParty, uint256 ethAmount);
     /**
     * Trade event:
     * @param transferOfferId - Index of transfer offer completed

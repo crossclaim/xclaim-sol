@@ -7,53 +7,25 @@ pragma solidity ^0.4.24;
 ///  This contract does not define any standard, but can be taken as a reference
 ///  implementation in case of any ambiguity into the standard
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "../ERCXXX_SGXRelay_Interface.sol";
-import "./ERCXXX_SGX.sol";
+import "./ERCXXX_Base.sol";
 
 
 
-contract ERCXXX_SGXRelay is ERCXXX_SGX("BTC-ERC-Relay", "BTH", 1), ERCXXX_SGXRelay_Interface {
+contract ERCXXX_SGXRelay is ERCXXX_Base("BTC-SGX-Relay", "BTH", 1) {
     using SafeMath for uint256;
 
     // #####################
     // CONTRACT VARIABLES
     // #####################
 
-    uint256 public issuerCollateral;
-    address issuerCandidate;
-    bool issuerReplace;
-    uint256 issuerReplaceTimelock;
-
-    struct RedeemRequest {
-        address redeemer;
-        uint value;
-        uint redeemTime;
-    }
-
-    uint256 redeemRequestId;
-    uint256[] public redeemRequestList;
-    mapping(uint => RedeemRequest) public redeemRequestMapping;
-
-    mapping(address => bool) public relayer;
-
     // #####################
     // CONSTRUCTOR
     // #####################
     constructor() public {
-        // Collateral required since we don't trust the issuer
-        minimumCollateral = 0.01 ether;
-    }
-
-    function authorizeIssuer(address toRegister) public payable {
-        require(msg.value >= minimumCollateral);
-        /* Allows only 1 Issuer */
-        require(issuer == address(0));
-        issuer = toRegister;
-        /* Total amount of tokens that you can issue */
-        issuerTokenSupply = convertEthToBtc(msg.value);
-        issuerCollateral = msg.value;
-        issuerReplace = false;
-        emit AuthorizedIssuer(toRegister, msg.value);
+        // issuer
+        _issuerCollateral = 0;
+        // collateral
+        _minimumCollateralIssuer = 1 wei;
     }
 
     function pendingRedeemRequests() public view returns(uint256[]) {

@@ -7,12 +7,12 @@ pragma solidity ^0.4.24;
 ///  This contract does not define any standard, but can be taken as a reference
 ///  implementation in case of any ambiguity into the standard
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "./ERCXXX_SGXRelay.sol";
+import "./ERCXXX_Base.sol";
 import "../BTCRelay/BTCRelay.sol";
 
 
 
-contract ERCXXX_BTCRelay is ERCXXX_SGXRelay {
+contract ERCXXX_BTCRelay is ERCXXX_Base("BTC-ERC-Relay", "BTH", 1) {
     using SafeMath for uint256;
 
     // #####################
@@ -20,11 +20,15 @@ contract ERCXXX_BTCRelay is ERCXXX_SGXRelay {
     // #####################
 
     BTCRelay btcRelay;
-    address public relayer;
 
     constructor (address _btcRelay) public {
+        // issuer
+        _issuerCollateral = 0;
+        // collateral
+        _minimumCollateralIssuer = 1 wei;
+        // relay
         btcRelay = BTCRelay(_btcRelay);
-        relayer = _btcRelay;
+        _relayer = _btcRelay;
     }
 
     // Not needed in that case
