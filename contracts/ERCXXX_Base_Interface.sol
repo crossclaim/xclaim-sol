@@ -180,3 +180,4 @@ contract ERCXXX_Base_Interface is ERC20_Interface {
     event LockReplace(address indexed issuerCandidate, uint256 collateral);
 
     event AbortReplace(address indexed issuerCandidate, uint256 collateral);
+}
