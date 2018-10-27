@@ -27,7 +27,7 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
     uint256 private _issuerTokenSupply; // token supply per issuer
     uint256 private _issuerCommitedTokens; // token commited by issuer
     uint256 private _issuerCollateral;
-    address private _issuerCandidate; //what is this?
+    address private _issuerCandidate;
     bool private _issuerReplace;
     uint256 private _issuerReplaceTimelock;
 
@@ -168,24 +168,64 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
     }
 
     // Relayers
-    // function authorizeRelayer in implementations
+    function authorizeRelayer(address toRegister) public {
+        // TODO: Implement SGX or BTC Relay
+        emit AuthorizedRelayer(toRegister);
+    }
 
     function revokeRelayer(address toUnlist) public {
         _relayer = address(0);
-        emit RevokeRelayer(relayer, data);
+        emit RevokedRelayer(relayer);
     }
 
     // ---------------------
     // ISSUE
     // ---------------------
 
-    function registerIssue(uint256 amount) public payable; 
+    function registerIssue(uint256 amount) public payable {
+        require(msg.value >= _minimumCollateralUser);
+        /* If there is not enough tokens, return back the collateral */
+        // Not required in case of centralised SGX issuer
+        // if (issuerTokenSupply < amount + issuerCommitedTokens) { // TODO might need a 3rd variable here
+        //     msg.sender.transfer(msg.value);
+        //     return;
+        // }
+        uint8 issueType = 0;
+        if (_issuerTokenSupply < amount + _issuerCommitedTokens) { // TODO might need a 3rd variable here
+            msg.sender.transfer(msg.value);
+            return;
+        }
 
-    function issueCol(address receiver, uint256 amount, bytes lock_tx) public;
+        uint256 timelock = now + 1 seconds;
+        _issuerCommitedTokens += amount;
+        _userCommitedCollateral[msg.sender] = CommitedCollateral(timelock, amount);
+        
+        // TODO: need to lock issuers collateral
+        
+        // emit event
+        emit RegisterIssue(msg.sender, amount, timelock, issueType);
+    }
 
-    function registerHTLC(uint256 locktime, uint256 amount, bytes32 script, bytes32 signature, bytes data) public;
+    // Individual implementation
+    function issueCol(address receiver, uint256 amount, bytes lock_tx) public {
+        // TODO: Implement
 
-    function issueHTLC(address receiver, uint256 amount, bytes lock_tx) public;
+        emit AbortIssue(msg.sender, receiver, amount, lock_tx);
+    }
+
+    function registerHTLC(uint256 timelock, uint256 amount, bytes32 script, bytes32 signature, bytes data) public {
+        _userHTLC[msg.sender] = HTLC(timelock, amount, script, signature, data);
+        uint8 issueType = 1;
+
+        emit RegisterIssue(msg.sender, amount, timelock, issueType);
+    }
+
+    // Individual implementation
+    function issueHTLC(address receiver, uint256 amount, bytes lock_tx) public {
+        // TODO: Implement
+        
+        emit AbortIssue(msg.sender, receiver, amount, lock_tx);
+    }
 
     // ---------------------
     // TRADE
@@ -218,12 +258,49 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
     // REDEEM
     // ---------------------
 
-    function redeem(address redeemer, uint256 amount, bytes redeem_tx) public;
+    // Individual implementation
+    function redeem(address redeemer, uint256 amount, bytes data) public {
+        emit Redeem(redeemer, msg.sender, amount, data);
+    }
 
     // ---------------------
     // REPLACE
     // ---------------------
 
+    function requestReplace() public {
+        require(msg.sender == _issuer);
+        require(!_issuerReplace);
+
+        _issuerReplace = true;
+        _issuerReplaceTimelock = now + 1 seconds;
+
+        emit RequestReplace(_issuer, _issuerCollateral);
+    }
+
+    function lockCol() public payable {
+        require(_issuerReplace);
+        require(msg.sender != _issuer);
+        require(msg.value >= _issuerCollateral);
+
+        _issuerCandidate = msg.sender;
+
+        emit LockReplace(_issuerCandidate, msg.value);
+    }
+
+    // Idividual implementation
+    // function replace(bytes data)
+
+    function abortReplace() public {
+        require(_issuerReplace);
+        require(msg.sender == _issuerCandidate);
+        require(_issuerReplaceTimelock < now);
+
+        _issuerReplace = false;
+
+        _issuerCandidate.transfer(_issuerCollateral);
+
+        emit AbortReplace(_issuerCandidate, _issuerCollateral);
+    }
 
     // ---------------------
     // HELPERS
@@ -232,32 +309,5 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
     function _convertEthToBtc(uint256 eth) private pure returns(uint256) {
         /* TODO use a contract that uses middleware to get the conversion rate */
         return eth * _conversionRateBTCETH;
-    }
-
-    function _verifyHTLC() private pure returns (bool) {
-        // TODO: store bytes
-        // signature
-        // locktime
-        // script
-        return true;
-    }
-
-    function _verifyTx(bytes data) private returns (bool verified) {
-        // data from line 256 https://github.com/ethereum/btcrelay/blob/develop/test/test_btcrelay.py
-        bytes memory rawTx = "0x8c14f0db3df150123e6f3dbbf30f8b955a8249b62ac1d1ff16284aefa3d06d87";
-        uint256 txIndex = 0;
-        uint256[] memory merkleSibling = new uint256[](2);
-        merkleSibling[0] = uint256(sha256("0xfff2525b8931402dd09222c50775608f75787bd2b87e56995a7bdd30f79702c4"));
-        merkleSibling[1] = uint256(sha256("0x8e30899078ca1813be036a073bbf80b86cdddde1c96e9e9c99e9e3782df4ae49"));
-        uint256 blockHash = uint256(sha256("0x0000000000009b958a82c10804bd667722799cc3b457bc061cd4b7779110cd60"));
-
-        uint256 result = btcRelay.verifyTx(rawTx, txIndex, merkleSibling, blockHash);
-
-        // TODO: Implement this correctly, now for testing only
-        if (data.length == 0) {
-            return false;
-        } else {
-            return true;
-        }
     }
 }

@@ -48,33 +48,14 @@ contract ERCXXX_SGXRelay is ERCXXX_Base("BTC-SGX-Relay", "BTH", 1) {
     // ISSUE
     // ---------------------
 
-    function registerIssue(uint256 amount) public payable {
-        require(msg.value >= minimumCollateralCommitment);
-
-        uint8 issueType = 0;
-        /* If there is not enough tokens, return back the collateral */
-        if (issuerTokenSupply < amount + issuerCommitedTokens) { // TODO might need a 3rd variable here
-            msg.sender.transfer(msg.value);
-            return;
-        }
-        uint256 timelock = now + 1 seconds;
-        issuerCommitedTokens += amount;
-        userCommitedCollateral[msg.sender] = CommitedCollateral(timelock, amount);
-        
-        // TODO: need to lock issuers collateral
-        
-        // emit event
-        emit RegisterIssue(msg.sender, amount, timelock, issueType);
-    }
-
     function issueCol(address receiver, uint256 amount, bytes data) public {
         /* This method can only be called by a BTC relay */
         // address btcrelay;
         // require(msg.sender == btcrelay);
         // Should be the SGX relay, but does not matter for now
-        require(relayer[msg.sender]);
+        require(msg.sender == _relayer);
         
-        // BTCRelay verifyTx callback
+        // SGX needs to verif this
         if (data.length != 0) {
             // issue tokens
             totalSupply += amount;
@@ -90,13 +71,6 @@ contract ERCXXX_SGXRelay is ERCXXX_Base("BTC-SGX-Relay", "BTH", 1) {
             emit AbortIssue(msg.sender, receiver, amount, data);
             return;
         }
-    }
-
-    function registerHTLC(uint256 timelock, uint256 amount, bytes32 script, bytes32 signature, bytes data) public {
-        userHTLC[msg.sender] = HTLC(timelock, amount, script, signature, data);
-        uint8 issueType = 1;
-
-        emit RegisterIssue(msg.sender, amount, timelock, issueType);
     }
 
     function issueHTLC(address receiver, uint256 amount, bytes data) public {
@@ -173,26 +147,6 @@ contract ERCXXX_SGXRelay is ERCXXX_Base("BTC-SGX-Relay", "BTH", 1) {
     // REPLACE
     // #####################
 
-    function requestReplace() public {
-        require(msg.sender == issuer);
-        require(!issuerReplace);
-
-        issuerReplace = true;
-        issuerReplaceTimelock = now + 1 seconds;
-
-        emit RequestReplace(issuer, issuerCollateral);
-    }
-
-    function lockCol() public payable {
-        require(issuerReplace);
-        require(msg.sender != issuer);
-        require(msg.value >= issuerCollateral);
-
-        issuerCandidate = msg.sender;
-
-        emit LockReplace(issuerCandidate, msg.value);
-    }
-
     function replace(bytes data) public {
         // SGX only calls this if BTC tx is valid, BTCRelay requires call to check tx
         require(issuerReplace);
@@ -205,23 +159,5 @@ contract ERCXXX_SGXRelay is ERCXXX_Base("BTC-SGX-Relay", "BTH", 1) {
         issuer.transfer(issuerCollateral);
 
         emit Replace(issuerCandidate, issuerCollateral);
-    }
-
-    function abortReplace() public {
-        require(issuerReplace);
-        require(msg.sender == issuerCandidate);
-        require(issuerReplaceTimelock < now);
-
-        issuerReplace = false;
-
-        issuerCandidate.transfer(issuerCollateral);
-
-        emit AbortReplace(issuerCandidate, issuerCollateral);
-    }
-
-    function convertEthToBtc(uint256 eth) private pure returns(uint256) {
-        /* TODO use a contract that uses middleware to get the conversion rate */
-        uint256 conversionRate = 2;
-        return eth * conversionRate;
     }
 }
