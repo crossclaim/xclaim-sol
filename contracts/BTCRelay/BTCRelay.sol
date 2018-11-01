@@ -48,7 +48,7 @@ contract BTCRelay {
 
     // TODO: implement this
     // Dirty hacky stuff
-    function verifyHash(uint256 txHash, uint256 txIndex, uint256[] merkleSibling, uint256 blockHash) private returns (bool) {        
+    function verifyHash(uint256 txHash, uint256 txIndex, uint256[] merkleSibling, uint256 blockHash) private pure returns (bool) {        
         if (hasSixConfirms(blockHash) == false) {
             return false;
         }
@@ -70,7 +70,7 @@ contract BTCRelay {
 
     // TODO: implement this
     // Dirty hacky stuff
-    function hasSixConfirms(uint256 blockHash) private returns (bool) {
+    function hasSixConfirms(uint256 blockHash) private pure returns (bool) {
         for (uint256 i = 0; i<6; i++) {
             // check block hashes
             if (blockHash == 0) {
@@ -82,14 +82,14 @@ contract BTCRelay {
 
     // TODO: implement this
     // Dirty hacky stuff
-    function isInMainChain(uint256 blockHash) private returns (bool){
+    function isInMainChain(uint256 blockHash) private pure returns (bool){
         if (blockHash == 0) {
             return true;
         }
         return true;        
     }
 
-    function computeMerkle(uint256 txHash, uint256 txIndex, uint256[] merkleSibling) private returns (uint256 resultHash) {
+    function computeMerkle(uint256 txHash, uint256 txIndex, uint256[] merkleSibling) private pure returns (uint256 resultHash) {
         uint256 left;
         uint256 right;
         uint256 sideOfSibling;
@@ -121,14 +121,14 @@ contract BTCRelay {
 
     // TODO: implement this
     // Dirty hacky stuff
-    function getMerkleRoot(uint256 blockHash) private returns (uint256) {
+    function getMerkleRoot(uint256 blockHash) private pure returns (uint256) {
         if (blockHash == 0) {
             return 0;
         }
         return 0;
     }
 
-    function concatHash(uint256 tx1, uint256 tx2) private returns (uint256) {
+    function concatHash(uint256 tx1, uint256 tx2) private pure returns (uint256) {
         bytes32 tx1_b = bytes32(tx1);
         bytes32 tx2_b = bytes32(tx2);
         
