@@ -14,6 +14,5 @@ module.exports = {
     convertToUsd: function (gasCost) {
         return gasCost * web3.fromWei(gas_price, "ether") * eth_usd;
     }
-
 };
 
