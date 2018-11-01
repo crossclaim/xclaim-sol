@@ -8,10 +8,9 @@ pragma solidity ^0.4.24;
 ///  implementation in case of any ambiguity into the standard
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./ERCXXX_Base.sol";
-import "../ERCXXX_SGX_Interface.sol";
 
 
-contract ERCXXX_SGX is ERCXXX_Base("BTC-ERC-SGX", "BTH", 1), ERCXXX_SGX_Interface {
+contract ERCXXX_SGX is ERCXXX_Base("BTC-ERC-SGX", "BTH", 1) {
     using SafeMath for uint256;
 
     // #####################
