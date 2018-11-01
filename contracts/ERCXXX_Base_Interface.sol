@@ -27,6 +27,7 @@ contract ERCXXX_Base_Interface is ERC20_Interface {
     // NOTE: Most of the tokens SHOULD be fully partitionable, i.e. this function SHOULD return 1 unless there is a good reason for not allowing any partition of the token.
     function granularity() public view returns (uint256);
     function issuer() public view returns(address);
+    function relayer() public view returns (address);
     function pendingRedeemRequests() public view returns(uint256[]);
 
     // #####################
@@ -54,9 +55,9 @@ contract ERCXXX_Base_Interface is ERC20_Interface {
 
     function revokeIssuer(address toUnlist) private;
 
-    function authorizeRelayer(address toRegister) public;
+    // function authorizeRelayer(address toRegister) public;
 
-    function revokeRelayer(address toUnlist) public;
+    // function revokeRelayer(address toUnlist) public;
 
     // ---------------------
     // ISSUE
@@ -66,18 +67,18 @@ contract ERCXXX_Base_Interface is ERC20_Interface {
 
     /**
     * Issues new units of cryptocurrency-backed token.
-    * @param receiver - ETH address of the receiver, as provided in the 'lock' transaction in the native native currency
-    * @param amount - number of issued tokens
-    * @param lock_tx - data, contains 'lock' transaction [OPTIONAL?]
+    * @ receiver - ETH address of the receiver, as provided in the 'lock' transaction in the native native currency
+    * @ amount - number of issued tokens
+    * @ lock_tx - data, contains 'lock' transaction [OPTIONAL?]
     * TODO: decide if data this is required. We probably only need the txid
     *
     * ASSERT: msg.sender in relayer list, abort otherwise.
     */
-    function issueCol(address receiver, uint256 amount, bytes lock_tx) public;
+    // function issueCol(address receiver, uint256 amount, bytes lock_tx) public;
 
     function registerHTLC(uint256 locktime, uint256 amount, bytes32 script, bytes32 signature, bytes data) public;
 
-    function issueHTLC(address receiver, uint256 amount, bytes lock_tx) public;
+    // function issueHTLC(address receiver, uint256 amount, bytes lock_tx) public;
 
     // ---------------------
     // TRADE
@@ -106,9 +107,9 @@ contract ERCXXX_Base_Interface is ERC20_Interface {
 
     /**
     * Initiates the redeeming of backed-tokens in the native cryptocurrency. Redeemed tokens are 'burned' in the process.
-    * @param redeemer - redeemer address
+    * @ redeemer - redeemer address
     * id of the token struct to be redeemed (and hence burned)
-    * @param data - data, contains the 'redeem' transaction to be signed by the issuer
+    * @ data - data, contains the 'redeem' transaction to be signed by the issuer
     *
     * ASSERT:
     * -) redeemer actually owns the given amount of tokens (including transaction fees in the native blockchain)
@@ -116,6 +117,22 @@ contract ERCXXX_Base_Interface is ERC20_Interface {
     * TODO: optional: add checks - is the first 'lock' TX still unspent and does this tx actually spend from the first 'lock' tx correctly. Will require call to relay.
     */
     function redeem(address redeemer, uint256 amount, bytes data) public;
+
+    function redeemConfirm(address redeemer, uint256 id, bytes data) public;
+
+    function reimburse(address redeemer, uint256 id, bytes data) public;
+
+    // ---------------------
+    // REPLACE
+    // ---------------------
+    function requestReplace() public;
+
+    function lockCol() public payable;
+
+    function replace(bytes data) public;
+
+    function abortReplace() public;
+
 
     // #####################
     // EVENTS
@@ -176,14 +193,14 @@ contract ERCXXX_Base_Interface is ERC20_Interface {
     event Redeem(address indexed redeemer, address indexed issuer, uint value, bytes data, uint id);
 
     event RedeemSuccess(address indexed redeemer, uint256 id);
-    
+
     event Reimburse(address indexed redeemer, address indexed issuer, uint value);
 
-    event RequestReplace(address indexed issuer, uint256 amount);
+    event Replace(address indexed new_issuer, uint256 amount);
+
+    event RequestReplace(address indexed issuer, uint256 amount, uint256 timelock);
 
     event LockReplace(address indexed candidate, uint256 amount);
-
-    event Replace(address indexed new_issuer, uint256 amount);
 
     event AbortReplace(address indexed candidate, uint256 amount);
 }
