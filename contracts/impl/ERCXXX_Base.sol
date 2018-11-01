@@ -120,6 +120,10 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
         return _issuer;
     }
 
+    function relayer() public view returns(address) {
+        return _relayer;
+    }
+
     function pendingRedeemRequests() public view returns(uint256[]) {
         return _redeemRequestList;
     }
@@ -274,7 +278,7 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
         _issuerReplace = true;
         _issuerReplaceTimelock = now + 1 seconds;
 
-        emit RequestReplace(_issuer, _issuerCollateral);
+        emit RequestReplace(_issuer, _issuerCollateral, _issuerReplaceTimelock);
     }
 
     function lockCol() public payable {
@@ -287,7 +291,7 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
         emit LockReplace(_issuerCandidate, msg.value);
     }
 
-    // Idividual implementation
+    // Individual implementation
     // function replace(bytes data)
 
     function abortReplace() public {
