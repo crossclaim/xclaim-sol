@@ -8,7 +8,6 @@ pragma solidity ^0.4.24;
 ///  implementation in case of any ambiguity into the standard
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./ERCXXX_Base.sol";
-import "../ERCXXX_BTCRelay_Interface.sol";
 import "../BTCRelay/BTCRelay.sol";
 
 
@@ -22,9 +21,11 @@ contract ERCXXX_BTCRelay is ERCXXX_Base("BTC-ERC-Relay", "BTH", 1) {
 
     BTCRelay btcRelay;
 
-    constructor () public {
+    constructor (address _relay) public {
         // issuer
         _issuerCollateral = 0;
+        // relay
+        authorizeRelayer(_relay);
         // collateral
         _minimumCollateralIssuer = 1 wei;
     }
@@ -36,7 +37,6 @@ contract ERCXXX_BTCRelay is ERCXXX_Base("BTC-ERC-Relay", "BTH", 1) {
     // Relayers
     function authorizeRelayer(address toRegister) public {
         /* TODO: who authroizes this? */
-        // Do we need the data argument?
         // Does the relayer need to provide collateral?
         require(_relayer == address(0));
         require(msg.sender != _relayer);
@@ -44,6 +44,13 @@ contract ERCXXX_BTCRelay is ERCXXX_Base("BTC-ERC-Relay", "BTH", 1) {
         _relayer = toRegister;
         btcRelay = BTCRelay(toRegister);
         emit AuthorizedRelayer(toRegister);
+    }
+
+    function revokeRelayer(address toUnlist) public {
+        // TODO: who can do that?
+        _relayer = address(0);
+        btcRelay = BTCRelay(address(0));
+        emit RevokedRelayer(_relayer);
     }
 
     // ---------------------
@@ -124,8 +131,6 @@ contract ERCXXX_BTCRelay is ERCXXX_Base("BTC-ERC-Relay", "BTH", 1) {
         _redeemRequestList.push(_redeemRequestId);
         _redeemRequestMapping[_redeemRequestId] = RedeemRequest(redeemer, amount, (now + time));
 
-        // balances[redeemer] -= amount;
-        // Update this to include ID
         emit Redeem(redeemer, msg.sender, amount, data, _redeemRequestId);
     }
 
@@ -139,7 +144,7 @@ contract ERCXXX_BTCRelay is ERCXXX_Base("BTC-ERC-Relay", "BTH", 1) {
         _balances[redeemer] -= _redeemRequestMapping[id].value;
         _totalSupply -= _redeemRequestMapping[id].value;
         emit RedeemSuccess(redeemer, id);
-    }   
+    }
 
     function reimburse(address redeemer, uint256 id, bytes data) public {
         require(_redeemRequestMapping[id].redeemTime < now);

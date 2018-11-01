@@ -10,7 +10,6 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./ERCXXX_Base.sol";
 
 
-
 contract ERCXXX_SGXRelay is ERCXXX_Base("BTC-SGX-Relay", "BTH", 1) {
     using SafeMath for uint256;
 

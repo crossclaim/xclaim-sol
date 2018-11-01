@@ -267,6 +267,15 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
         emit Redeem(redeemer, msg.sender, amount, data, 0);
     }
 
+    // Individual implementation
+    function redeemConfirm(address redeemer, uint256 id, bytes data) public {
+        emit RedeemSuccess(redeemer, id);
+    }
+
+    function reimburse(address redeemer, uint256 id, bytes data) public {
+        emit Reimburse(redeemer, _issuer, 0);
+    }
+
     // ---------------------
     // REPLACE
     // ---------------------
@@ -292,7 +301,9 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
     }
 
     // Individual implementation
-    // function replace(bytes data)
+    function replace(bytes data) public {
+        emit Replace(_issuerCandidate, _issuerCollateral);
+    }
 
     function abortReplace() public {
         require(_issuerReplace);
