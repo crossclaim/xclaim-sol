@@ -71,11 +71,8 @@ contract BTCRelay {
     // TODO: implement this
     // Dirty hacky stuff
     function hasSixConfirms(uint256 blockHash) private pure returns (bool) {
-        for (uint256 i = 0; i<6; i++) {
-            // check block hashes
-            if (blockHash == 0) {
-                return (false); 
-            }
+        if (blockHash == 0) {
+            return (false); 
         }
         return (true);
     }
