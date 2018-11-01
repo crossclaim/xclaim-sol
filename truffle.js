@@ -1,7 +1,7 @@
 var HDWalletProvider = require("truffle-hdwallet-provider");
 
-var infura_apikey = "a311240a97d84b93b201e772187be620";
-var mnemonic = "alert pigeon review syrup similar narrow angle mobile purse breeze cream length";
+var infura_apikey = "xxx";
+var mnemonic = "xxx";
 
 module.exports = {
   // See <http://truffleframework.com/docs/advanced/configuration>
