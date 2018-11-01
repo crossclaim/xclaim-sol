@@ -58,13 +58,8 @@ contract ERCXXX_BTCRelay is ERCXXX_Base("BTC-ERC-Relay", "BTH", 1) {
     // ---------------------
 
     function issueCol(address receiver, uint256 amount, bytes data) public {
-        /* This method can only be called by a BTC relay */
-        // address btcrelay;
-        // require(msg.sender == btcrelay);
-        // Should be the SGX relay, but does not matter for now
-        // require(msg.sender == relayer);
-
-         // BTCRelay verifyTx callback
+        /* Can be called by anyone */
+        // BTCRelay verifyTx callback
         bool result = _verifyTx(data);
 
         if (result) {
