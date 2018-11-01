@@ -119,8 +119,8 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
 
         // #### SETUP #####
         // check if authorize event fired
-        let fail_authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(collateral, "ether") });
-        eventFired(fail_authorize_tx, "AuthorizedIssuer");
+        let success_authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(collateral, "ether") });
+        eventFired(success_authorize_tx, "AuthorizedIssuer");
 
         // #### COLL. ISSUE #####
         // check if issue event is fired

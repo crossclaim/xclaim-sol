@@ -1,3 +1,8 @@
+var helpers = require('./helpers');
+var eventFired = helpers.eventFired;
+var convertToUsd = helpers.convertToUsd;
+
+
 const ERCXXX_SGX = artifacts.require("./impl/ERCXXX_SGX.sol");
 
 // Writing experiments data to CSV
@@ -265,7 +270,7 @@ contract('ERCXXX_SGX', async (accounts) => {
 
     it("Experiment success", async () => {
         let balance_alice, balance_bob, balance_carol;
-        let amount = 0.01;
+        let amount = 1;
 
         // #### SETUP #####
         // check if authorize event fired
@@ -287,7 +292,7 @@ contract('ERCXXX_SGX', async (accounts) => {
         // check if Alice's balance is updated
         balance_alice = await btc_erc.balanceOf.call(alice);
         balance_alice = balance_alice.toNumber();
-        assert.equal(balance_alice, amount, "SUCCESS COL: Alice balance should be 1");
+        assert.equal(balance_alice, amount, "SUCCESS COL: Alice balance should be 0.01");
 
         // #### HTLC ISSUE #####
         // check if issue event is fired
@@ -351,7 +356,7 @@ contract('ERCXXX_SGX', async (accounts) => {
 
     it("Experiment fail", async () => {
         let balance_alice, balance_bob, balance_carol;
-        let amount = 0.01;
+        let amount = 1;
 
         // #### SETUP #####
         // check if authorize event fired
@@ -442,22 +447,5 @@ contract('ERCXXX_SGX', async (accounts) => {
         redeem_success_gas += 0;
         redeem_success_txs += 0;
     })
-
-    function eventFired(transaction, eventName) {
-        for (var i = 0; i < transaction.logs.length; i++) {
-            var log = transaction.logs[i];
-            if (log.event == eventName) {
-                // We found the event!
-                assert.isTrue(true);
-            }
-            else {
-                assert.isTrue(false);
-            }
-        }
-    };
-
-    function convertToUsd(gasCost) {
-        return gasCost * web3.fromWei(gas_price, "ether") * eth_usd;
-    }
 
 })
