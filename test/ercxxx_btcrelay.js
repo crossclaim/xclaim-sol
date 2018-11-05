@@ -1,3 +1,7 @@
+var helpers = require('./helpers');
+var eventFired = helpers.eventFired;
+var convertToUsd = helpers.convertToUsd;
+
 const ERCXXX_BTCRelay = artifacts.require("./impl/ERCXXX_BTCRelay.sol");
 const BTCRelay = artifacts.require("./BTCRelay/BTCRelay.sol");
 
@@ -22,8 +26,6 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
     const btc_tx = "3a7bdf6d01f068841a99cce22852698df8428d07c68a32d867b112a4b24c8fe0";
 
     // gas price conversion
-    const gas_price = web3.toWei(5, "gwei");
-    const eth_usd = 409; // USD
     const gas_limit = 7988288;
 
     // experiment related vars
@@ -113,23 +115,26 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
         btc_erc = await ERCXXX_BTCRelay.deployed();
     });
 
-    it("Experiment success", async () => {
-        let balance_alice, balance_bob, balance_carol;
-        let amount = 0.01;
-
+    it("Setup", async () => {
         // #### SETUP #####
         // check if authorize event fired
-        let success_authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(collateral, "ether") });
-        eventFired(success_authorize_tx, "AuthorizedIssuer");
+        let authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(collateral, "ether") });
+        eventFired(authorize_tx, "AuthorizedIssuer");
+    })
+
+    it("Experiment success", async () => {
+        let balance_alice, balance_bob, balance_carol;
+        let amount = 1;
+        let user_collateral = web3.toWei(0.00000001, "ether")
 
         // #### COLL. ISSUE #####
         // check if issue event is fired
-        let issue_register_col_tx = await btc_erc.registerIssue(amount, { from: alice, value: web3.toWei(amount, "ether") });
+        let issue_register_col_tx = await btc_erc.registerIssue(amount, { from: alice, value: user_collateral, gas: gas_limit });
         eventFired(issue_register_col_tx, "RegisterIssue");
         issue_success_col_gas += issue_register_col_tx.receipt.gasUsed;
         issue_success_col_txs += 1;
 
-        let issue_col_tx = await btc_erc.issueCol(alice, amount, btc_tx, { from: relayer, gas: gas_limit });
+        let issue_col_tx = await btc_erc.issueCol(alice, amount, btc_tx, { from: alice, gas: gas_limit });
         eventFired(issue_col_tx, "Issue");
         issue_success_col_gas += issue_col_tx.receipt.gasUsed;
         issue_success_col_txs += 1;
@@ -209,7 +214,7 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
         }
 
         // check if redeem succeeded
-        let redeem_success_tx = await btc_erc.redeemConfirm(bob, redeemId, btc_tx, { from: bob });
+        let redeem_success_tx = await btc_erc.redeemConfirm(bob, redeemId, btc_tx, { from: bob, gas: gas_limit});
         eventFired(redeem_success_tx, "RedeemSuccess");
         redeem_success_gas += redeem_success_tx.receipt.gasUsed;
         redeem_success_txs += 1;
@@ -228,24 +233,18 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
         replace_success_txs += 1;
 
         // replace the issuer
-        let replace_success_tx = await btc_erc.replace(btc_tx, { from: issuer });
+        let replace_success_tx = await btc_erc.replace(btc_tx, { from: issuer, gas: gas_limit });
         eventFired(replace_success_tx, "Replace");
         replace_success_gas += replace_success_tx.receipt.gasUsed;
         replace_success_txs += 1;
 
         var current_issuer = await btc_erc.issuer.call();
-        assert.equal(current_issuer, eve, "SUCCESS: Did not make Eve the issuer")
+        assert.equal(current_issuer, eve, "SUCCESS: Did make Eve the issuer")
     })
 
     it("Experiment fail", async () => {
         let balance_alice, balance_bob, balance_carol;
         let amount = 1;
-
-        // #### SETUP #####
-        // check if authorize event fired
-        let fail_authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(collateral, "ether") });
-        eventFired(fail_authorize_tx, "AuthorizedIssuer");
-
 
         // #### COLL. ISSUE #####
         // check if issue event is fired
@@ -267,6 +266,9 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
         // #### HTLC ISSUE #####
         // check if issue event is fired
         // DIRTY!
+        balance_carol = await btc_erc.balanceOf.call(carol);
+        init_balance_carol = balance_carol.toNumber();
+
         let fail_issue_register_htlc_tx = await btc_erc.registerHTLC(amount, amount, btc_tx, btc_tx, btc_tx, { from: carol });
         eventFired(fail_issue_register_htlc_tx, "RegisterIssue");
         issue_fail_htlc_gas += fail_issue_register_htlc_tx.receipt.gasUsed;
@@ -280,7 +282,7 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
         // check if Carol's balance is updated
         balance_carol = await btc_erc.balanceOf.call(carol);
         balance_carol = balance_carol.toNumber();
-        assert.equal(balance_carol, 0, "Carol balance should be 0");
+        assert.equal(balance_carol, init_balance_carol, "Alice balance should be 0");
 
 
 
@@ -324,7 +326,7 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
 
         assert.equal(balance_alice, 0, "FAIL: Alice balance should be 0");
         assert.equal(balance_bob, 0, "Bob balance should be 0");
-        assert.equal(balance_carol, 0, "Carol balance should be 0");
+        assert.equal(balance_carol, init_balance_carol, "Carol balance should be 0");
 
         // #### REDEEM #####
         // check if redeem event fired
@@ -361,15 +363,13 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
 
         // #### REPLACE #####
         // request the replace
-        let request_replace_fail_tx = await btc_erc.requestReplace({ from: issuer });
+        let request_replace_fail_tx = await btc_erc.requestReplace({ from: eve });
         eventFired(request_replace_fail_tx, "RequestReplace");
         replace_fail_gas += request_replace_fail_tx.receipt.gasUsed;
         replace_fail_txs += 1;
 
         // lock collateral
-        let this_collateral = await btc_erc.issuerCollateral.call();
-        this_collateral = this_collateral.toNumber();
-        let lock_col_fail_tx = await btc_erc.lockCol({ from: eve, value: this_collateral });
+        let lock_col_fail_tx = await btc_erc.lockCol({ from: issuer, value: web3.toWei(collateral, "ether") });
         eventFired(lock_col_fail_tx, "LockReplace");
         replace_fail_gas += lock_col_fail_tx.receipt.gasUsed;
         replace_fail_txs += 1;
@@ -378,31 +378,12 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         // replace abort
-        let replace_fail_tx = await btc_erc.abortReplace({ from: eve });
+        let replace_fail_tx = await btc_erc.abortReplace({ from: issuer });
         eventFired(replace_fail_tx, "AbortReplace");
         replace_fail_gas += replace_fail_tx.receipt.gasUsed;
         replace_fail_txs += 1;
 
         var current_issuer = await btc_erc.issuer.call();
-        assert.equal(current_issuer, issuer, "FAIL: Made Eve the issuer")
+        assert.equal(current_issuer, eve, "FAIL: Made another person the issuer")
     })
-
-    function eventFired(transaction, eventName) {
-        for (var i = 0; i < transaction.logs.length; i++) {
-            var log = transaction.logs[i];
-            if (log.event == eventName) {
-                // We found the event!
-                assert.isTrue(true);
-            }
-            else {
-                assert.isTrue(false, "Did not find " + eventName);
-            }
-        }
-    };
-
-    function convertToUsd(gasCost) {
-        return gasCost * web3.fromWei(gas_price, "ether") * eth_usd;
-    }
-
-
 })
