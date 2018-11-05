@@ -23,10 +23,6 @@ contract('ERCXXX_SGX', async (accounts) => {
     const carol = accounts[3];
     const btc_tx = "3a7bdf6d01f068841a99cce22852698df8428d07c68a32d867b112a4b24c8fe0";
 
-    // gas price conversion
-    const gas_price = web3.toWei(5, "gwei");
-    const eth_usd = 409; // USD
-
     // experiment related vars
     var issue_success_col_gas = 0;
     var issue_fail_col_gas = 0;
@@ -268,18 +264,21 @@ contract('ERCXXX_SGX', async (accounts) => {
         redeem_gas = redeem_tx.receipt.gasUsed;
     });
 
-    it("Experiment success", async () => {
-        let balance_alice, balance_bob, balance_carol;
-        let amount = 1;
-
+    it("Setup", async () => {
         // #### SETUP #####
         // check if authorize event fired
         let authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(collateral, "ether") });
         eventFired(authorize_tx, "AuthorizedIssuer");
+    })
+
+    it("Experiment success", async () => {
+        let balance_alice, balance_bob, balance_carol;
+        let amount = 1;
+        let user_collateral = web3.toWei(0.00000001, "ether")
 
         // #### COLL. ISSUE #####
         // check if issue event is fired
-        let issue_register_col_tx = await btc_erc.registerIssue(amount, { from: alice, value: web3.toWei(amount, "ether") });
+        let issue_register_col_tx = await btc_erc.registerIssue(amount, { from: alice, value: user_collateral });
         eventFired(issue_register_col_tx, "RegisterIssue");
         issue_success_col_gas += issue_register_col_tx.receipt.gasUsed;
         issue_success_col_txs += 1;
@@ -307,7 +306,7 @@ contract('ERCXXX_SGX', async (accounts) => {
         issue_success_htlc_gas += issue_htlc_tx.receipt.gasUsed;
         issue_success_htlc_txs += 1;
 
-        // check if Alice's balance is updated
+        // check if Carol's balance is updated
         balance_carol = await btc_erc.balanceOf.call(carol);
         balance_carol = balance_carol.toNumber();
         assert.equal(balance_carol, amount, "SUCCESS HTLC: Alice balance should be 1");
@@ -315,8 +314,12 @@ contract('ERCXXX_SGX', async (accounts) => {
 
 
         // #### TRADE #####
+        let num_tokens = 1;
+
+        let price_wei = 100;
+
         // Offer exchange of 1 token for 100 wei
-        let offer_tx = await btc_erc.offerTrade(1, 100, bob, { from: alice });
+        let offer_tx = await btc_erc.offerTrade(num_tokens, price_wei, bob, { from: alice });
         // Check event is fired
         eventFired(offer_tx, "NewTradeOffer");
         trade_success_gas += offer_tx.receipt.gasUsed;
@@ -331,7 +334,7 @@ contract('ERCXXX_SGX', async (accounts) => {
             }
         }
         // Complete the transfer
-        let trade_tx = await btc_erc.acceptTrade(offerId, { from: bob, value: 100 });
+        let trade_tx = await btc_erc.acceptTrade(offerId, { from: bob, value: price_wei });
         // Check event is fired
         eventFired(trade_tx, "Trade");
         trade_success_gas += trade_tx.receipt.gasUsed;
@@ -340,11 +343,14 @@ contract('ERCXXX_SGX', async (accounts) => {
         // check if balances are updated
         balance_alice = await btc_erc.balanceOf.call(alice);
         balance_alice = balance_alice.toNumber();
+
+        // await new Promise(resolve => setTimeout(resolve, 2000));
+        
         balance_bob = await btc_erc.balanceOf.call(bob);
         balance_bob = balance_bob.toNumber();
 
-        assert.equal(balance_alice, 0, "Alice balance should be 0");
-        assert.equal(balance_bob, amount, "Bob balance should be 1");
+        assert.equal(balance_alice, amount - num_tokens, "Alice balance should be 0");
+        assert.equal(balance_bob, num_tokens, "Bob balance should be 1");
 
         // #### REDEEM #####
         // check if redeem event fired
@@ -357,11 +363,6 @@ contract('ERCXXX_SGX', async (accounts) => {
     it("Experiment fail", async () => {
         let balance_alice, balance_bob, balance_carol;
         let amount = 1;
-
-        // #### SETUP #####
-        // check if authorize event fired
-        let fail_authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(collateral, "ether") });
-        eventFired(fail_authorize_tx, "AuthorizedIssuer");
 
         // #### COLL. ISSUE #####
         // check if issue event is fired
@@ -383,10 +384,16 @@ contract('ERCXXX_SGX', async (accounts) => {
         // #### HTLC ISSUE #####
         // check if issue event is fired
         // DIRTY!
+        balance_carol = await btc_erc.balanceOf.call(carol);
+        init_balance_carol = balance_carol.toNumber();
+
         let fail_issue_register_htlc_tx = await btc_erc.registerHTLC(amount, amount, btc_tx, btc_tx, btc_tx, { from: carol });
         eventFired(fail_issue_register_htlc_tx, "RegisterIssue");
         issue_fail_htlc_gas += fail_issue_register_htlc_tx.receipt.gasUsed;
         issue_fail_htlc_txs += 1;
+
+        // check if Carol's balance is updated
+
 
         let fail_issue_htlc_tx = await btc_erc.issueHTLC(carol, amount, "");
         eventFired(fail_issue_htlc_tx, "AbortIssue");
@@ -396,7 +403,7 @@ contract('ERCXXX_SGX', async (accounts) => {
         // check if Carol's balance is updated
         balance_carol = await btc_erc.balanceOf.call(carol);
         balance_carol = balance_carol.toNumber();
-        assert.equal(balance_carol, 0, "Alice balance should be 0");
+        assert.equal(balance_carol, init_balance_carol, "Alice balance should be 0");
 
 
 
