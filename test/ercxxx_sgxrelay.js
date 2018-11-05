@@ -1,3 +1,7 @@
+var helpers = require('./helpers');
+var eventFired = helpers.eventFired;
+var convertToUsd = helpers.convertToUsd;
+
 const ERCXXX_SGXRelay = artifacts.require("./impl/ERCXXX_SGXRelay.sol");
 
 // Writing experiments data to CSV
@@ -19,10 +23,6 @@ contract('ERCXXX_SGXRelay', async (accounts) => {
     const carol = accounts[4];
     const eve = accounts[5];
     const btc_tx = "3a7bdf6d01f068841a99cce22852698df8428d07c68a32d867b112a4b24c8fe0";
-
-    // gas price conversion
-    const gas_price = web3.toWei(5, "gwei");
-    const eth_usd = 409; // USD
 
     // experiment related vars
     var issue_success_col_gas = 0;
@@ -110,10 +110,7 @@ contract('ERCXXX_SGXRelay', async (accounts) => {
         btc_erc = await ERCXXX_SGXRelay.deployed();
     });
 
-    it("Experiment success", async () => {
-        let balance_alice, balance_bob, balance_carol;
-        let amount = 0.01;
-
+    it("Setup", async () => {
         // #### SETUP #####
         // check if authorize event fired
         let authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(collateral, "ether") });
@@ -122,6 +119,11 @@ contract('ERCXXX_SGXRelay', async (accounts) => {
         // check if authorize event fired
         let authorize_relay_tx = await btc_erc.authorizeRelayer(relayer, btc_tx, { from: relayer});
         eventFired(authorize_relay_tx, "AuthorizeRelayer"); 
+    })
+
+    it("Experiment success", async () => {
+        let balance_alice, balance_bob, balance_carol;
+        let amount = 0.01;
 
         // #### COLL. ISSUE #####
         // check if issue event is fired
@@ -241,15 +243,6 @@ contract('ERCXXX_SGXRelay', async (accounts) => {
     it("Experiment fail", async () => {
         let balance_alice, balance_bob, balance_carol;
         let amount = 0.01;
-
-        // #### SETUP #####
-        // check if authorize event fired
-        let fail_authorize_tx = await btc_erc.authorizeIssuer(issuer, { from: issuer, value: web3.toWei(collateral, "ether") });
-        eventFired(fail_authorize_tx, "AuthorizedIssuer");
-
-        // check if authorize event fired
-        let fail_authorize_relay_tx = await btc_erc.authorizeRelayer(relayer, btc_tx, { from: relayer });
-        eventFired(fail_authorize_relay_tx, "AuthorizeRelayer"); 
 
         // #### COLL. ISSUE #####
         // check if issue event is fired
@@ -533,23 +526,5 @@ contract('ERCXXX_SGXRelay', async (accounts) => {
         eventFired(redeem_success_tx, "RedeemSuccess");
         redeem_gas += redeem_success_tx.receipt.gasUsed;
     });
-
-    function eventFired(transaction, eventName) {
-        for (var i = 0; i < transaction.logs.length; i++) {
-            var log = transaction.logs[i];
-            if (log.event == eventName) {
-                // We found the event!
-                assert.isTrue(true);
-            }
-            else {
-                assert.isTrue(false, "Did not find " + eventName);
-            }
-        }
-    };
-
-    function convertToUsd(gasCost) {
-        return gasCost * web3.fromWei(gas_price, "ether") * eth_usd;
-    }
-
 
 })
