@@ -121,14 +121,14 @@ contract ERCXXX_SGXRelay is ERCXXX_Base("BTC-SGX-Relay", "BTH", 1) {
         emit Redeem(redeemer, msg.sender, amount, data, _redeemRequestId);
     }
 
-    function redeemConfirm(address redeemer, uint256 id) public {
+    function redeemConfirm(address redeemer, uint256 id, bytes data) public {
         require(_redeemRequestMapping[id].redeemTime > now);
         require(_redeemRequestMapping[id].value <= _balances[redeemer]);
 
         _balances[redeemer] -= _redeemRequestMapping[id].value;
         _totalSupply -= _redeemRequestMapping[id].value;
         emit RedeemSuccess(redeemer, id);
-    }   
+    }
 
     function reimburse(address redeemer, uint256 id) public {
         require(_redeemRequestMapping[id].redeemTime < now);
