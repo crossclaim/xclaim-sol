@@ -237,12 +237,13 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
 
     function offerTrade(uint256 tokenAmount, uint256 ethAmount, address ethParty) public {
         require(_balances[msg.sender] >= tokenAmount, "Insufficient balance");
-        _tradeOfferId += 1;
 
         _balances[msg.sender] -= tokenAmount;
         _tradeOfferStore[_tradeOfferId] = TradeOffer(msg.sender, ethParty, tokenAmount, ethAmount, false);
         
         emit NewTradeOffer(_tradeOfferId, msg.sender, tokenAmount, ethParty, ethAmount);
+
+        _tradeOfferId += 1;
     }
 
     function acceptTrade(uint256 offerId) payable public {
