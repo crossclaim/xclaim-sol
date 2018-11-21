@@ -185,7 +185,8 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
     // ---------------------
     // ISSUE
     // ---------------------
-
+    // user needs to provide btc address
+    // op_return needs to include ETH address
     function registerIssue(uint256 amount) public payable {
         require(msg.value >= _minimumCollateralUser);
         /* If there is not enough tokens, return back the collateral */
