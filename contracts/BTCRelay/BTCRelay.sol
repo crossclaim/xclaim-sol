@@ -19,7 +19,7 @@ contract BTCRelay {
     *  - txIndex is the index of the tx within the block
     *  - merkleSibling are the merkle siblings of tx 
     **/
-    function verifyTx(bytes rawTx, uint256 txIndex, uint256[] merkleSibling, uint256 blockHash) public returns (uint256 txHash) {
+    function verifyTx(bytes memory rawTx, uint256 txIndex, uint256[] memory merkleSibling, uint256 blockHash) public returns (uint256 txHash) {
         // double hash and XOR
         txHash = uint(~ (sha256(abi.encodePacked(sha256(abi.encodePacked(rawTx))))));
 
@@ -48,7 +48,7 @@ contract BTCRelay {
 
     // TODO: implement this
     // Dirty hacky stuff
-    function verifyHash(uint256 txHash, uint256 txIndex, uint256[] merkleSibling, uint256 blockHash) private pure returns (bool) {        
+    function verifyHash(uint256 txHash, uint256 txIndex, uint256[] memory merkleSibling, uint256 blockHash) private pure returns (bool) {        
         if (hasSixConfirms(blockHash) == false) {
             return false;
         }
@@ -86,7 +86,7 @@ contract BTCRelay {
         return true;        
     }
 
-    function computeMerkle(uint256 txHash, uint256 txIndex, uint256[] merkleSibling) private pure returns (uint256 resultHash) {
+    function computeMerkle(uint256 txHash, uint256 txIndex, uint256[] memory merkleSibling) private pure returns (uint256 resultHash) {
         uint256 left;
         uint256 right;
         uint256 sideOfSibling;
