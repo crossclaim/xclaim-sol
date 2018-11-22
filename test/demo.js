@@ -2,7 +2,7 @@ var helpers = require('./helpers');
 var eventFired = helpers.eventFired;
 
 const ERCXXX_BTCRelay = artifacts.require("./impl/ERCXXX_BTCRelay.sol");
-const BTCRelay = artifacts.require("./BTCRelay/BTCRelay.sol");
+// const BTCRelay = artifacts.require("./BTCRelay/BTCRelay.sol");
 
 contract('ERCXXX_BTCRelay', async (accounts) => {
     /* For testing and experiments the following roles apply: */
@@ -25,7 +25,7 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
     var redeem_success_gas = 0;
 
     it('setup contract', async function () {
-        btc_relay = await BTCRelay.deployed();
+        // btc_relay = await BTCRelay.deployed();
         btc_erc = await ERCXXX_BTCRelay.deployed();
 
         // #### SETUP #####

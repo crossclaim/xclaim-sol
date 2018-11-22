@@ -3,7 +3,7 @@ var eventFired = helpers.eventFired;
 var convertToUsd = helpers.convertToUsd;
 
 const ERCXXX_BTCRelay = artifacts.require("./impl/ERCXXX_BTCRelay.sol");
-const BTCRelay = artifacts.require("./BTCRelay/BTCRelay.sol");
+// const BTCRelay = artifacts.require("./BTCRelay/BTCRelay.sol");
 
 // Writing experiments data to CSV
 var fs = require("fs");
@@ -111,7 +111,7 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
     })
 
     beforeEach('setup contract', async function () {
-        btc_relay = await BTCRelay.deployed();
+        // btc_relay = await BTCRelay.deployed();
         btc_erc = await ERCXXX_BTCRelay.deployed();
     });
 
