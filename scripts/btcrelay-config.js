@@ -1,7 +1,7 @@
 module.exports = {
     networks: {
         development: {
-            address: "0x28e335e4bc3d62f6be2d1b1dcb67cbc65aa0d40b",
+            address: "0x6091148e8d06e100db5f5946797f36f0350a4972",
         },
         ropsten: {
             address: "",
