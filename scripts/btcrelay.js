@@ -1,20 +1,20 @@
-var fs = require("fs");
+var helpers = require('./helpers');
+
 
 module.exports = function (callback) {
-    const btcrelay_abi = fs.readFileSync("./contracts/btcrelay-serpent/btcrelay-abi.json");
-    const btcrelay_bytes = fs.readFileSync("./contracts/btcrelay-serpent/btcrelay-bytecode", "utf8");
-
-    
 
     deploy = () => {
         console.log("Trying to deploy");
         // const accounts = await web3.eth.getAccounts();
         const accounts = web3.eth.accounts;
         console.log('Attempting to deploy from account ',accounts[0]);
-        var contract = web3.eth.contract(JSON.parse(btcrelay_abi))
+        var my_abi = helpers.getAbi();
+        var my_bytecode = helpers.getBytecode();
+
+        var contract = web3.eth.contract(my_abi)
         var address;
         contract.new({ 
-            data:'0x'+btcrelay_bytes, 
+            data:'0x'+my_bytecode, 
             from:accounts[0], 
             gas: 3000000 }, function (err, contract) {
                 if (!err) {
