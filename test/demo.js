@@ -2,7 +2,7 @@ var helpers = require('./helpers');
 var eventFired = helpers.eventFired;
 
 const ERCXXX_BTCRelay = artifacts.require("./impl/ERCXXX_BTCRelay.sol");
-const BTCRelay = artifacts.require("./BTCRelay/BTCRelay.sol");
+// const BTCRelay = artifacts.require("./BTCRelay/BTCRelay.sol");
 
 contract('ERCXXX_BTCRelay', async (accounts) => {
     /* For testing and experiments the following roles apply: */
@@ -24,8 +24,8 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
     var redeem_success_txs = 0;
     var redeem_success_gas = 0;
 
-    it('setup contract', async function () {
-        btc_relay = await BTCRelay.deployed();
+    xit('setup contract', async function () {
+        // btc_relay = await BTCRelay.deployed();
         btc_erc = await ERCXXX_BTCRelay.deployed();
 
         // #### SETUP #####
@@ -34,7 +34,7 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
         eventFired(success_authorize_tx, "AuthorizedIssuer");
     });
 
-    it("Alice issue collateralized BTC-ERC", async () => {
+    xit("Alice issue collateralized BTC-ERC", async () => {
         let balance_alice;
         // #### COLL. ISSUE #####
         // check if issue event is fired
@@ -55,7 +55,7 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
 
     });
 
-    it("Redeem BTC-ERC from Bob", async () => {
+    xit("Redeem BTC-ERC from Bob", async () => {
         let balance_bob;
 
         // #### COLL. ISSUE #####

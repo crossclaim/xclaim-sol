@@ -8,7 +8,7 @@ pragma solidity ^0.4.24;
 ///  implementation in case of any ambiguity into the standard
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./ERCXXX_Base.sol";
-import "../BTCRelay/BTCRelay.sol";
+// import "../BTCRelay/BTCRelay.sol";
 
 
 
@@ -19,7 +19,7 @@ contract ERCXXX_BTCRelay is ERCXXX_Base("BTC-ERC-Relay", "BTH", 1) {
     // CONTRACT VARIABLES
     // #####################
 
-    BTCRelay btcRelay;
+    // BTCRelay btcRelay;
 
     constructor (address _relay) public {
         // issuer
@@ -42,14 +42,14 @@ contract ERCXXX_BTCRelay is ERCXXX_Base("BTC-ERC-Relay", "BTH", 1) {
         require(msg.sender != _relayer);
 
         _relayer = toRegister;
-        btcRelay = BTCRelay(toRegister);
+        // btcRelay = BTCRelay(toRegister);
         emit AuthorizedRelayer(toRegister);
     }
 
     function revokeRelayer(address toUnlist) public {
         // TODO: who can do that?
         _relayer = address(0);
-        btcRelay = BTCRelay(address(0));
+        // btcRelay = BTCRelay(address(0));
         emit RevokedRelayer(_relayer);
     }
 
@@ -58,13 +58,8 @@ contract ERCXXX_BTCRelay is ERCXXX_Base("BTC-ERC-Relay", "BTH", 1) {
     // ---------------------
 
     function issueCol(address receiver, uint256 amount, bytes data) public {
-        /* This method can only be called by a BTC relay */
-        // address btcrelay;
-        // require(msg.sender == btcrelay);
-        // Should be the SGX relay, but does not matter for now
-        // require(msg.sender == relayer);
-
-         // BTCRelay verifyTx callback
+        /* Can be called by anyone */
+        // BTCRelay verifyTx callback
         bool result = _verifyTx(data);
 
         if (result) {
@@ -124,6 +119,8 @@ contract ERCXXX_BTCRelay is ERCXXX_Base("BTC-ERC-Relay", "BTH", 1) {
         /* The redeemer must have enough tokens to burn */
         require(_balances[redeemer] >= amount);
 
+        // need to lock tokens
+
         // for testing
         uint256 time = 1 seconds;
 
@@ -143,6 +140,7 @@ contract ERCXXX_BTCRelay is ERCXXX_Base("BTC-ERC-Relay", "BTH", 1) {
 
         _balances[redeemer] -= _redeemRequestMapping[id].value;
         _totalSupply -= _redeemRequestMapping[id].value;
+        // increase token amount of issuer that can be used for issuing
         emit RedeemSuccess(redeemer, id);
     }
 
@@ -150,7 +148,7 @@ contract ERCXXX_BTCRelay is ERCXXX_Base("BTC-ERC-Relay", "BTH", 1) {
         require(_redeemRequestMapping[id].redeemTime < now);
         require(msg.sender == _redeemRequestMapping[id].redeemer);
 
-        bool result = _verifyTx(data);
+        // bool result = _verifyTx(data);
 
         _issuerCollateral -= _redeemRequestMapping[id].value;
         _balances[redeemer] -= _redeemRequestMapping[id].value;
@@ -184,12 +182,12 @@ contract ERCXXX_BTCRelay is ERCXXX_Base("BTC-ERC-Relay", "BTH", 1) {
     // HELPERS
     // ---------------------
 
-    function _verifyHTLC() private pure returns (bool) {
+    function _verifyHTLC(bytes data) private returns (bool) {
         // TODO: store bytes
         // signature
         // locktime
         // script
-        return true;
+        _verifyTx(data);
     }
 
     function _verifyTx(bytes data) private returns (bool verified) {
@@ -201,7 +199,8 @@ contract ERCXXX_BTCRelay is ERCXXX_Base("BTC-ERC-Relay", "BTH", 1) {
         merkleSibling[1] = uint256(sha256("0x8e30899078ca1813be036a073bbf80b86cdddde1c96e9e9c99e9e3782df4ae49"));
         uint256 blockHash = uint256(sha256("0x0000000000009b958a82c10804bd667722799cc3b457bc061cd4b7779110cd60"));
 
-        uint256 result = btcRelay.verifyTx(rawTx, txIndex, merkleSibling, blockHash);
+        bool success  = _relayer.call(abi.encodeWithSignature("verifyTx(bytes, uint256, uint256[], uint256)"), rawTx, txIndex, merkleSibling, blockHash);
+        // uint256 result = btcRelay.verifyTx(rawTx, txIndex, merkleSibling, blockHash);
 
         // TODO: Implement this correctly, now for testing only
         if (data.length == 0) {

@@ -185,7 +185,8 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
     // ---------------------
     // ISSUE
     // ---------------------
-
+    // user needs to provide btc address
+    // op_return needs to include ETH address
     function registerIssue(uint256 amount) public payable {
         require(msg.value >= _minimumCollateralUser);
         /* If there is not enough tokens, return back the collateral */
@@ -241,8 +242,9 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
         _balances[msg.sender] -= tokenAmount;
         _tradeOfferStore[_tradeOfferId] = TradeOffer(msg.sender, ethParty, tokenAmount, ethAmount, false);
         
-        _tradeOfferId += 1;
         emit NewTradeOffer(_tradeOfferId, msg.sender, tokenAmount, ethParty, ethAmount);
+
+        _tradeOfferId += 1;
     }
 
     function acceptTrade(uint256 offerId) payable public {
@@ -253,6 +255,7 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
         /* Complete the offer */
         _tradeOfferStore[offerId].completed = true;
         _balances[msg.sender] = _balances[msg.sender] + _tradeOfferStore[offerId].tokenAmount;
+        
         _tradeOfferStore[offerId].tokenParty.transfer(msg.value);
 
         emit Trade(offerId, _tradeOfferStore[offerId].tokenParty, _tradeOfferStore[offerId].tokenAmount, msg.sender, msg.value);
@@ -291,9 +294,9 @@ contract ERCXXX_Base is ERCXXX_Base_Interface, ERC20 {
     }
 
     function lockCol() public payable {
-        require(_issuerReplace);
-        require(msg.sender != _issuer);
-        require(msg.value >= _issuerCollateral);
+        require(_issuerReplace, "Issuer did not request change");
+        require(msg.sender != _issuer, "Needs to be replaced by a non-issuer");
+        require(msg.value >= _issuerCollateral, "Collateral needs to be high enough");
 
         _issuerCandidate = msg.sender;
 

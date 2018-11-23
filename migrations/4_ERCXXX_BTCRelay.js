@@ -1,14 +1,11 @@
-var BTCRelay = artifacts.require("./BTCRelay/BTCRelay.sol");
+// var BTCRelay = artifacts.require("./BTCRelay/BTCRelay.sol");
 var ERCXXX_BTCRelay = artifacts.require("./impl/ERCXXX_BTCRelay.sol");
+var btcrelay_config = require('../scripts/btcrelay-config');
 
 module.exports = function (deployer, network) {
     if (network == "development") {
-        deployer.deploy(BTCRelay).then(function () {
-            return deployer.deploy(ERCXXX_BTCRelay, BTCRelay.address);
-        })
-    } else if (network== "") {
-
-        // Perform a different step otherwise.
+        deployer.deploy(ERCXXX_BTCRelay, btcrelay_config.networks.development.address);
+    } else if (network == "ropsten") {
+        // Use existing deployed contracts
     }
-
 };
