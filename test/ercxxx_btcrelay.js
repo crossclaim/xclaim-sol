@@ -35,6 +35,7 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
     var issue_fail_htlc_gas = 0;
     var trade_success_gas = 0;
     var trade_fail_gas = 0;
+    var transfer_success_gas = 0;
     var redeem_success_gas = 0;
     var redeem_fail_gas = 0;
     var replace_success_gas = 0;
@@ -46,6 +47,7 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
     var issue_fail_htlc_txs = 0;
     var trade_success_txs = 0;
     var trade_fail_txs = 0;
+    var transfer_success_txs = 0;
     var redeem_success_txs = 0;
     var redeem_fail_txs = 0;
     var replace_success_txs = 0;
@@ -63,6 +65,7 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
         let issue_fail_htlc_usd = convertToUsd(issue_fail_htlc_gas);
         let trade_success_usd = convertToUsd(trade_success_gas);
         let trade_fail_usd = convertToUsd(trade_fail_gas);
+        let transfer_success_usd = convertToUsd(transfer_success_gas);
         let redeem_success_usd = convertToUsd(redeem_success_gas);
         let redeem_fail_usd = convertToUsd(redeem_fail_gas);
         let replace_success_usd = convertToUsd(replace_success_gas);
@@ -74,6 +77,7 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
                 IssueColFail: issue_fail_col_gas,
                 IssueHTLCSuccesss: issue_success_htlc_gas,
                 IssueHTLCFail: issue_fail_htlc_gas,
+                Transfer: transfer_success_gas,
                 TradeSuccess: trade_success_gas,
                 TradeFail: trade_fail_gas,
                 RedeemSuccess: redeem_success_gas,
@@ -87,6 +91,7 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
                 IssueColFail: issue_fail_col_usd,
                 IssueHTLCSuccesss: issue_success_htlc_usd,
                 IssueHTLCFail: issue_fail_htlc_usd,
+                Transfer: transfer_success_usd,
                 TradeSuccess: trade_success_usd,
                 TradeFail: trade_fail_usd,
                 RedeemSuccess: redeem_success_usd,
@@ -100,6 +105,7 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
                 IssueColFail: issue_fail_col_txs,
                 IssueHTLCSuccesss: issue_success_htlc_txs,
                 IssueHTLCFail: issue_fail_htlc_txs,
+                Transfer: transfer_success_txs,
                 TradeSuccess: trade_success_txs,
                 TradeFail: trade_fail_txs,
                 RedeemSuccess: redeem_success_txs,
@@ -162,7 +168,13 @@ contract('ERCXXX_BTCRelay', async (accounts) => {
         balance_carol = balance_carol.toNumber();
         assert.equal(balance_carol, amount, "SUCCESS HTLC: Alice balance should be 1");
 
-
+        // #### TRANSFER #####
+        let transfer_one = await btc_erc.transfer(bob, 1, { from: alice });
+        eventFired(transfer_one, "Transfer");
+        transfer_success_gas = transfer_one.receipt.gasUsed;
+        transfer_success_txs = 1;
+        
+        let transfer_two = await btc_erc.transfer(alice, 1, { from: bob });
 
         // #### TRADE #####
         // Offer exchange of 1 token for 100 wei
