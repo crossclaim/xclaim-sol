@@ -10,11 +10,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "bitcoin-core": "^2.0.0",
-    "bitcoinjs-lib": "^4.0.1",
     "csv-write-stream": "^2.0.0",
     "fs": "0.0.1-security",
-    "openzeppelin-solidity": "^1.11.0",
+    "openzeppelin-solidity": "^2.0.0",
+    "truffle": "^5.0.1",
     "truffle-hdwallet-provider": "0.0.6"
   },
   "directories": {
