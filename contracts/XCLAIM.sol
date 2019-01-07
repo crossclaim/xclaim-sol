@@ -11,11 +11,13 @@ contract XCLAIM is Treasury {
     constructor (
         string memory myname, 
         string memory mysymbol, 
-        uint256 mygranularity) 
+        uint256 mygranularity,
+        address relayer) 
         public {
         _name = myname;
         _symbol = mysymbol;
         _granularity = mygranularity;
+        super.authorizeRelayer(relayer);
     }
 
     function name() public view returns (string memory) {
