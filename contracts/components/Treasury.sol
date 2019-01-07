@@ -344,7 +344,6 @@ contract Treasury is Treasury_Interface, ERC20 {
         uint256 blockHash = uint256(sha256("0x0000000000009b958a82c10804bd667722799cc3b457bc061cd4b7779110cd60"));
 
         (bool success, bytes memory returnData)  = _relayer.call(abi.encodeWithSignature("verifyTx(bytes, uint256, uint256[], uint256)", rawTx, txIndex, merkleSibling, blockHash));
-        // uint256 result = btcRelay.verifyTx(rawTx, txIndex, merkleSibling, blockHash);
 
         // TODO: Implement this correctly, now for testing only
         if (data.length == 0) {
