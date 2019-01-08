@@ -1,3 +1,6 @@
+var helpers = require('./helpers');
+var convertToUsd = helpers.convertToUsd;
+
 // Writing experiments data to CSV
 var fs = require("fs");
 var csvWriter = require('csv-write-stream');
@@ -28,26 +31,26 @@ var redeem_fail_txs = 0;
 var replace_success_txs = 0;
 var replace_fail_txs = 0;
 
+contract('Tx and Gas measurements', async (accounts) => {
 
-before('Create writer for experiments', async () => {
-    writer.pipe(fs.createWriteStream(('./experiments/Gas_ERCXXX_BTCRelay.csv')));
-})
+    before('Create writer for experiments', async () => {
+        // writer.pipe(fs.createWriteStream(('./experiments/Gas_ERCXXX_BTCRelay.csv')));
+    })
 
-after('Write experiment data to file', async () => {
-    let issue_success_col_usd = convertToUsd(issue_success_col_gas);
-    let issue_fail_col_usd = convertToUsd(issue_fail_col_gas);
-    let issue_success_htlc_usd = convertToUsd(issue_success_htlc_gas);
-    let issue_fail_htlc_usd = convertToUsd(issue_fail_htlc_gas);
-    let trade_success_usd = convertToUsd(trade_success_gas);
-    let trade_fail_usd = convertToUsd(trade_fail_gas);
-    let transfer_success_usd = convertToUsd(transfer_success_gas);
-    let redeem_success_usd = convertToUsd(redeem_success_gas);
-    let redeem_fail_usd = convertToUsd(redeem_fail_gas);
-    let replace_success_usd = convertToUsd(replace_success_gas);
-    let replace_fail_usd = convertToUsd(replace_fail_gas);
+    after('Write experiment data to file', async () => {
+        let issue_success_col_usd = convertToUsd(issue_success_col_gas);
+        let issue_fail_col_usd = convertToUsd(issue_fail_col_gas);
+        let issue_success_htlc_usd = convertToUsd(issue_success_htlc_gas);
+        let issue_fail_htlc_usd = convertToUsd(issue_fail_htlc_gas);
+        let trade_success_usd = convertToUsd(trade_success_gas);
+        let trade_fail_usd = convertToUsd(trade_fail_gas);
+        let transfer_success_usd = convertToUsd(transfer_success_gas);
+        let redeem_success_usd = convertToUsd(redeem_success_gas);
+        let redeem_fail_usd = convertToUsd(redeem_fail_gas);
+        let replace_success_usd = convertToUsd(replace_success_gas);
+        let replace_fail_usd = convertToUsd(replace_fail_gas);
 
-    writer.write(
-        {
+        writer.write({
             IssueColSuccess: issue_success_col_gas,
             IssueColFail: issue_fail_col_gas,
             IssueHTLCSuccesss: issue_success_htlc_gas,
@@ -60,8 +63,7 @@ after('Write experiment data to file', async () => {
             ReplaceSuccess: replace_success_gas,
             ReplaceFail: replace_fail_gas
         });
-    writer.write(
-        {
+        writer.write({
             IssueColSuccess: issue_success_col_usd,
             IssueColFail: issue_fail_col_usd,
             IssueHTLCSuccesss: issue_success_htlc_usd,
@@ -74,8 +76,7 @@ after('Write experiment data to file', async () => {
             ReplaceSuccess: replace_success_usd,
             ReplaceFail: replace_fail_usd
         });
-    writer.write(
-        {
+        writer.write({
             IssueColSuccess: issue_success_col_txs,
             IssueColFail: issue_fail_col_txs,
             IssueHTLCSuccesss: issue_success_htlc_txs,
@@ -88,5 +89,7 @@ after('Write experiment data to file', async () => {
             ReplaceSuccess: replace_success_txs,
             ReplaceFail: replace_fail_txs
         });
-    writer.end();
+        writer.end();
+    })
+
 })
