@@ -14,7 +14,7 @@
     "fs": "0.0.1-security",
     "openzeppelin-solidity": "^2.1.1",
     "truffle": "^5.0.1",
-    "truffle-hdwallet-provider": "0.0.6"
+    "truffle-hdwallet-provider": "1.0.2"
   },
   "directories": {
     "test": "test"
