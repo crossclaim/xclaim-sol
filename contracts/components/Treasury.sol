@@ -174,18 +174,24 @@ contract Treasury is Treasury_Interface, ERC20 {
     }
 
     function issueToken(address receiver, uint256 amount, bytes memory data) public {
+        require(_userCommitedCollateral[receiver].collateral > 0, "Collateral too small");
+
         // check if within time delta
-        require(now < _userCommitedCollateral[receiver].commitTimeLimit);
+        bool time_limit = (_userCommitedCollateral[receiver].commitTimeLimit > now);
+
         // BTCRelay verifyTx callback
         bool tx_valid = _verifyTx(data);
 
         // TODO: match btc and eth address
         bool address_valid = _verifyAddress(receiver, _userCommitedCollateral[receiver].btcAddress, data);
 
-        if (tx_valid && address_valid) {
+        if (time_limit && tx_valid && address_valid) {
             // issue tokens
             _totalSupply += amount;
             _balances[receiver] += amount;
+            // reset user issue
+            _userCommitedCollateral[msg.sender].collateral = 0; 
+            _userCommitedCollateral[msg.sender].commitTimeLimit = 0;
 
             emit IssueToken(msg.sender, receiver, amount, data);
             return;
@@ -193,7 +199,7 @@ contract Treasury is Treasury_Interface, ERC20 {
             // abort issue
             _issuerCommitedTokens -= amount;
             // slash user collateral
-            _userCommitedCollateral[msg.sender].collateral = 0; 
+            _userCommitedCollateral[msg.sender].collateral = 0;
 
             emit AbortIssue(msg.sender, receiver, amount, data);
             return;
