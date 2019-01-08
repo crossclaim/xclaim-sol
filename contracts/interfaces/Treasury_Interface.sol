@@ -14,7 +14,6 @@ contract Treasury_Interface {
     // function granularity() public view returns (uint256);
     function issuer() public view returns(address);
     function relayer() public view returns (address);
-    function pendingRedeemRequests() public view returns(uint256[] memory);
 
     // #####################
     // FUNCTIONS

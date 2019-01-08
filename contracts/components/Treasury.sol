@@ -60,7 +60,6 @@ contract Treasury is Treasury_Interface, ERC20 {
         uint256 redeemTime;
     }
     mapping(uint => RedeemRequest) public _redeemRequestMapping;
-    uint256[] public _redeemRequestList;
     uint256 public _redeemRequestId;
 
     constructor() public {
@@ -94,10 +93,6 @@ contract Treasury is Treasury_Interface, ERC20 {
 
     function relayer() public view returns(address) {
         return _relayer;
-    }
-
-    function pendingRedeemRequests() public view returns(uint256[] memory) {
-        return _redeemRequestList;
     }
 
     // ---------------------
@@ -262,9 +257,6 @@ contract Treasury is Treasury_Interface, ERC20 {
         uint256 time = 1 seconds;
 
         _redeemRequestId++;
-
-        // TODO: maybe drop _redeemRequestList
-        _redeemRequestList.push(_redeemRequestId);
         _redeemRequestMapping[_redeemRequestId] = RedeemRequest(redeemer, amount, (now + time));
 
         emit RequestRedeem(redeemer, msg.sender, amount, data, _redeemRequestId);
