@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 /// @title BTCRelay
 /// @author Dominik Harz
@@ -7,7 +7,7 @@ pragma solidity ^0.4.24;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 
-contract BTCRelay {
+contract MockBTCRelay {
     using SafeMath for uint;
 
     /**
@@ -113,7 +113,7 @@ contract BTCRelay {
             index /= 2;
         }
 
-        return (resultHash);
+        return resultHash;
     }
 
     // TODO: implement this

@@ -2,7 +2,7 @@
 
 // See <https://github.com/ethereum/EIPs/issues/20>.
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 contract ERC20_Interface {
 
