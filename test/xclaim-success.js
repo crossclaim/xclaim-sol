@@ -11,13 +11,13 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
     const relayer = accounts[1];
     const alice = accounts[2];
     const bob = accounts[3];
-    const carol = accounts[4];
     const eve = accounts[5];
 
     const amount = 1;
     const collateral = "0.01";
     const collateral_user = "0.00000001";
-    const collateral_user_number = 0.00000001;
+    let user_collateral = web3.utils.toWei(collateral_user, "ether");
+
     const btc_tx = web3.utils.hexToBytes("0x3a7bdf6d01f068841a99cce22852698df8428d07c68a32d867b112a4b24c8fe0");
 
     // gas limit
@@ -39,8 +39,6 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
 
     it("Issue asset", async () => {
         let balance_alice, balance_bob, balance_carol;
-
-        let user_collateral = web3.utils.toWei(collateral_user, "ether")
 
         // check if issue event is fired
         let issue_register_col_tx = await btc_erc.registerIssue(amount, btc_tx, {
