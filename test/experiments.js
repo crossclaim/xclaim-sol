@@ -51,8 +51,8 @@ contract('Tx and Gas measurements', async (accounts) => {
         let replace_fail_usd = convertToUsd(replace_fail_gas);
 
         writer.write({
-            IssueColSuccess: issue_success_col_gas,
-            IssueColFail: issue_fail_col_gas,
+            issueTokenSuccess: issue_success_col_gas,
+            issueTokenFail: issue_fail_col_gas,
             IssueHTLCSuccesss: issue_success_htlc_gas,
             IssueHTLCFail: issue_fail_htlc_gas,
             Transfer: transfer_success_gas,
@@ -64,8 +64,8 @@ contract('Tx and Gas measurements', async (accounts) => {
             ReplaceFail: replace_fail_gas
         });
         writer.write({
-            IssueColSuccess: issue_success_col_usd,
-            IssueColFail: issue_fail_col_usd,
+            issueTokenSuccess: issue_success_col_usd,
+            issueTokenFail: issue_fail_col_usd,
             IssueHTLCSuccesss: issue_success_htlc_usd,
             IssueHTLCFail: issue_fail_htlc_usd,
             Transfer: transfer_success_usd,
@@ -77,8 +77,8 @@ contract('Tx and Gas measurements', async (accounts) => {
             ReplaceFail: replace_fail_usd
         });
         writer.write({
-            IssueColSuccess: issue_success_col_txs,
-            IssueColFail: issue_fail_col_txs,
+            issueTokenSuccess: issue_success_col_txs,
+            issueTokenFail: issue_fail_col_txs,
             IssueHTLCSuccesss: issue_success_htlc_txs,
             IssueHTLCFail: issue_fail_htlc_txs,
             Transfer: transfer_success_txs,

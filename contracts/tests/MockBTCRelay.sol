@@ -20,7 +20,7 @@ contract MockBTCRelay {
     *  - merkleSibling are the merkle siblings of tx 
     **/
     function verifyTx(bytes memory rawTx, uint256 txIndex, uint256[] memory merkleSibling, uint256 blockHash) public returns (uint256 txHash) {
-        // double hash and XOR
+        // double hash and negate
         txHash = uint(~ (sha256(abi.encodePacked(sha256(abi.encodePacked(rawTx))))));
 
         bytes32 anotherTx;

@@ -49,7 +49,7 @@ contract Treasury_Interface {
 
     function registerIssue(uint256 amount, bytes memory btcAddress) public payable; 
 
-    function issueCol(address receiver, uint256 amount, bytes memory data) public;
+    function issueToken(address receiver, uint256 amount, bytes memory data) public;
 
     event RegisterIssue(address indexed sender, uint256 value, uint256 timelock);
 

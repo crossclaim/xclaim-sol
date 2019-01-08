@@ -36,6 +36,7 @@ contract Treasury is Treasury_Interface, ERC20 {
     struct CommitedCollateral {
         uint256 commitTimeLimit;
         uint256 collateral;
+        bytes btcAddress;
     }
     mapping(address => CommitedCollateral) public _userCommitedCollateral;
 
@@ -54,8 +55,8 @@ contract Treasury is Treasury_Interface, ERC20 {
     // redeem
     struct RedeemRequest {
         address payable redeemer;
-        uint value;
-        uint redeemTime;
+        uint256 value;
+        uint256 redeemTime;
     }
     mapping(uint => RedeemRequest) public _redeemRequestMapping;
     uint256[] public _redeemRequestList;
@@ -137,7 +138,8 @@ contract Treasury is Treasury_Interface, ERC20 {
 
     // Relayers
     function authorizeRelayer(address toRegister) public {
-        /* TODO: who authroizes this? */
+        /* TODO: who authroizes this? 
+        For now, this method is only available in the constructor */
         // Does the relayer need to provide collateral?
         require(_relayer == address(0));
         require(msg.sender != _relayer);
@@ -159,15 +161,11 @@ contract Treasury is Treasury_Interface, ERC20 {
     // ---------------------
     function registerIssue(uint256 amount, bytes memory btcAddress) public payable {
         require(msg.value >= _minimumCollateralUser, "Collateral too small");
-        /* If there is not enough tokens, return back the collateral */
-        if (_issuerTokenSupply < amount + _issuerCommitedTokens) {
-            msg.sender.transfer(msg.value);
-            return;
-        }
+        require(_issuerTokenSupply > amount + _issuerCommitedTokens, "Not enough collateral provided by issuer");
 
-        uint256 timelock = now + 1 seconds;
+        uint256 timelock = now + 60 seconds;
         _issuerCommitedTokens += amount;
-        _userCommitedCollateral[msg.sender] = CommitedCollateral(timelock, amount);
+        _userCommitedCollateral[msg.sender] = CommitedCollateral(timelock, amount, btcAddress);
         
         // TODO: need to lock issuers collateral
         
@@ -175,12 +173,16 @@ contract Treasury is Treasury_Interface, ERC20 {
         emit RegisterIssue(msg.sender, amount, timelock);
     }
 
-    function issueCol(address receiver, uint256 amount, bytes memory data) public {
-        /* Can be called by anyone */
+    function issueToken(address receiver, uint256 amount, bytes memory data) public {
+        // check if within time delta
+        require(now < _userCommitedCollateral[receiver].commitTimeLimit);
         // BTCRelay verifyTx callback
-        bool result = _verifyTx(data);
+        bool tx_valid = _verifyTx(data);
 
-        if (result) {
+        // TODO: match btc and eth address
+        bool address_valid = _verifyAddress(receiver, _userCommitedCollateral[receiver].btcAddress, data);
+
+        if (tx_valid && address_valid) {
             // issue tokens
             _totalSupply += amount;
             _balances[receiver] += amount;
@@ -190,7 +192,8 @@ contract Treasury is Treasury_Interface, ERC20 {
         } else {
             // abort issue
             _issuerCommitedTokens -= amount;
-            _userCommitedCollateral[msg.sender] = CommitedCollateral(0,0);
+            // slash user collateral
+            _userCommitedCollateral[msg.sender].collateral = 0; 
 
             emit AbortIssue(msg.sender, receiver, amount, data);
             return;
@@ -351,6 +354,10 @@ contract Treasury is Treasury_Interface, ERC20 {
         } else {
             return true;
         }
+    }
+
+    function _verifyAddress(address receiver, bytes memory btcAddress, bytes memory data) private returns (bool verified) {
+        return true;
     }
 
     function _convertEthToBtc(uint256 eth) private view returns(uint256) {

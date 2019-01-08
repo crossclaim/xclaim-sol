@@ -52,7 +52,7 @@ contract('FAIL: XCLAIM', async (accounts) => {
         // issue_fail_col_gas += fail_issue_register_col_tx.receipt.gasUsed;
         // issue_fail_col_txs += 1;
 
-        let fail_issue_col_tx = await btc_erc.issueCol(alice, amount, invalid_tx, {
+        let fail_issue_col_tx = await btc_erc.issueToken(alice, amount, invalid_tx, {
             from: relayer
         });
         eventFired(fail_issue_col_tx, "AbortIssue");
@@ -76,7 +76,7 @@ contract('FAIL: XCLAIM', async (accounts) => {
         eventFired(fail3_issue_register_col_tx, "RegisterIssue");
 
 
-        let fail3_issue_col_tx = await btc_erc.issueCol(alice, amount, btc_tx, {
+        let fail3_issue_col_tx = await btc_erc.issueToken(alice, amount, btc_tx, {
             from: alice
         });
         eventFired(fail3_issue_col_tx, "IssueToken");
