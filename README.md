@@ -1,6 +1,15 @@
 # Instructions
 
-## General
+
+## Install
+
+Make sure ganache-cli and truffle are installed as global packages. Then, install the required packages with:
+
+```
+npm install
+```
+
+## Test
 
 Start ganache:
 
@@ -8,7 +17,11 @@ Start ganache:
 ganache-cli
 ```
 
-## Migrate contracts
+Migrate contracts:
+
+```
+truffle console
+```
 
 From your truffle console:
 
@@ -16,12 +29,10 @@ From your truffle console:
 migrate
 ```
 
-## Test
-
 From your truffle console:
 
 ```
 test
 ```
 
-Tests will execute locally and override the gas values in `experiments` for the three different contracts.
+Tests will execute locally.
