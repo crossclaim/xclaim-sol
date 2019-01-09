@@ -65,18 +65,16 @@ contract Treasury_Interface {
     
     event NewTradeOffer(uint256 id, address indexed tokenParty, uint256 tokenAmount, address indexed ethParty, uint256 ethAmount);
 
-    event Trade(uint256 transferOfferId, address indexed tokenParty, uint256 tokenAmount, address indexed ethParty, uint256 ethAmount);
+    event AcceptTrade(uint256 transferOfferId, address indexed tokenParty, uint256 tokenAmount, address indexed ethParty, uint256 ethAmount);
 
     // ---------------------
     // REDEEM
 
     // ---------------------
 
-    function redeem(address payable redeemer, uint256 amount, bytes memory data) public;
+    function requestRedeem(address payable redeemer, uint256 amount, bytes memory data) public;
 
-    function redeemConfirm(address redeemer, uint256 id, bytes memory data) public;
-
-    function reimburse(address payable redeemer, uint256 id, bytes memory data) public;
+    function confirmRedeem(address payable redeemer, uint256 id, bytes memory data) public;
 
     event RequestRedeem(address indexed redeemer, address indexed issuer, uint value, bytes data, uint id);
 

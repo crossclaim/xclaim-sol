@@ -34,32 +34,32 @@ contract Treasury is Treasury_Interface, ERC20 {
     uint256 public _conversionRateBTCETH; // 10*5 granularity?
 
     // issue
-    struct CommitedCollateral {
+    struct CollateralCommit {
         uint256 blocknumber;
         uint256 collateral;
         bytes btcAddress;
     }
-    mapping(address => CommitedCollateral) public _userCommitedCollateral;
+    mapping(address => CollateralCommit) public _collateralCommits;
 
     // swap
-    struct TradeOffer {
+    struct Trade {
         address payable tokenParty;
         address payable ethParty;
         uint256 tokenAmount;
         uint256 ethAmount;
         bool completed;
     }
-    mapping(uint256 => TradeOffer) public _tradeOfferStore;
-    uint256 public _tradeOfferId; //todo: do we need this?
+    mapping(uint256 => Trade) public _trades;
+    uint256 public _tradeId; //todo: do we need this?
 
 
     // redeem
     struct RedeemRequest {
         address payable redeemer;
         uint256 value;
-        uint256 redeemTime;
+        uint256 blocknumber;
     }
-    mapping(uint => RedeemRequest) public _redeemRequestMapping;
+    mapping(uint => RedeemRequest) public _redeemRequests;
     uint256 public _redeemRequestId;
 
     constructor() public {
@@ -78,7 +78,7 @@ contract Treasury is Treasury_Interface, ERC20 {
         // conversion rate
         _conversionRateBTCETH = 2 * 10 ^ 5; // equals 1 BTC = 2 ETH
         // init id counters
-        _tradeOfferId = 0;
+        _tradeId = 0;
         _redeemRequestId = 0;
     }
 
@@ -161,7 +161,7 @@ contract Treasury is Treasury_Interface, ERC20 {
         require(_issuerTokenSupply > amount + _issuerCommitedTokens, "Not enough collateral provided by issuer");
 
         _issuerCommitedTokens += amount;
-        _userCommitedCollateral[msg.sender] = CommitedCollateral(block.number, amount, btcAddress);
+        _collateralCommits[msg.sender] = CollateralCommit(block.number, amount, btcAddress);
 
         // TODO: need to lock issuers collateral
 
@@ -170,31 +170,24 @@ contract Treasury is Treasury_Interface, ERC20 {
     }
 
     function issueToken(address receiver, uint256 amount, bytes memory data) public {
-        require(_userCommitedCollateral[receiver].collateral > 0, "Collateral too small");
+        require(_collateralCommits[receiver].collateral > 0, "Collateral too small");
 
         // check if within number of blocks
-
-        bool confirmed;
-        if ((_userCommitedCollateral[receiver].blocknumber >= (block.number - _confirmations)) 
-        && (_userCommitedCollateral[receiver].blocknumber <= (block.number + _contestationPeriod))) {
-            confirmed = true;
-        } else {
-            confirmed = false;
-        }
+        bool block_valid = _verifyBlock(_collateralCommits[receiver].blocknumber);
 
         // BTCRelay verifyTx callback
         bool tx_valid = _verifyTx(data);
 
         // TODO: match btc and eth address
-        bool address_valid = _verifyAddress(receiver, _userCommitedCollateral[receiver].btcAddress, data);
+        bool address_valid = _verifyAddress(receiver, _collateralCommits[receiver].btcAddress, data);
 
-        if (confirmed && tx_valid && address_valid) {
+        if (block_valid && tx_valid && address_valid) {
             // issue tokens
             _totalSupply += amount;
             _balances[receiver] += amount;
             // reset user issue
-            _userCommitedCollateral[msg.sender].collateral = 0;
-            _userCommitedCollateral[msg.sender].blocknumber = 0;
+            _collateralCommits[msg.sender].collateral = 0;
+            _collateralCommits[msg.sender].blocknumber = 0;
 
             emit IssueToken(msg.sender, receiver, amount, data);
             return;
@@ -202,7 +195,7 @@ contract Treasury is Treasury_Interface, ERC20 {
             // abort issue
             _issuerCommitedTokens -= amount;
             // slash user collateral
-            _userCommitedCollateral[msg.sender].collateral = 0;
+            _collateralCommits[msg.sender].collateral = 0;
 
             emit AbortIssue(msg.sender, receiver, amount, data);
             return;
@@ -222,71 +215,65 @@ contract Treasury is Treasury_Interface, ERC20 {
         require(_balances[msg.sender] >= tokenAmount, "Insufficient balance");
 
         _balances[msg.sender] -= tokenAmount;
-        _tradeOfferStore[_tradeOfferId] = TradeOffer(msg.sender, ethParty, tokenAmount, ethAmount, false);
+        _trades[_tradeId] = Trade(msg.sender, ethParty, tokenAmount, ethAmount, false);
 
-        emit NewTradeOffer(_tradeOfferId, msg.sender, tokenAmount, ethParty, ethAmount);
+        emit NewTradeOffer(_tradeId, msg.sender, tokenAmount, ethParty, ethAmount);
 
-        _tradeOfferId += 1;
+        _tradeId += 1;
     }
 
     function acceptTrade(uint256 offerId) payable public {
         /* Verify offer exists and the provided ether is enough */
-        require(_tradeOfferStore[offerId].completed == false, "Trade completed");
-        require(msg.value >= _tradeOfferStore[offerId].ethAmount, "Insufficient amount");
+        require(_trades[offerId].completed == false, "Trade completed");
+        require(msg.value >= _trades[offerId].ethAmount, "Insufficient amount");
 
         /* Complete the offer */
-        _tradeOfferStore[offerId].completed = true;
-        _balances[msg.sender] = _balances[msg.sender] + _tradeOfferStore[offerId].tokenAmount;
+        _trades[offerId].completed = true;
+        _balances[msg.sender] = _balances[msg.sender] + _trades[offerId].tokenAmount;
 
-        _tradeOfferStore[offerId].tokenParty.transfer(msg.value);
+        _trades[offerId].tokenParty.transfer(msg.value);
 
-        emit Trade(offerId, _tradeOfferStore[offerId].tokenParty, _tradeOfferStore[offerId].tokenAmount, msg.sender, msg.value);
+        emit AcceptTrade(offerId, _trades[offerId].tokenParty, _trades[offerId].tokenAmount, msg.sender, msg.value);
     }
 
     // ---------------------
     // REDEEM
     // ---------------------
-    function redeem(address payable redeemer, uint256 amount, bytes memory data) public {
-
+    function requestRedeem(address payable redeemer, uint256 amount, bytes memory data) public {
         /* The redeemer must have enough tokens to burn */
         require(_balances[redeemer] >= amount);
 
         // need to lock tokens
-
-        // for testing
-        uint256 time = 1 seconds;
+        _balances[redeemer] -= amount;
 
         _redeemRequestId++;
-        _redeemRequestMapping[_redeemRequestId] = RedeemRequest(redeemer, amount, (now + time));
+        _redeemRequests[_redeemRequestId] = RedeemRequest(redeemer, amount, (block.number + _confirmations));
 
         emit RequestRedeem(redeemer, msg.sender, amount, data, _redeemRequestId);
     }
 
     // TODO: make these two functions into one
-    function redeemConfirm(address redeemer, uint256 id, bytes memory data) public {
-        require(_redeemRequestMapping[id].redeemTime > now);
-        require(_redeemRequestMapping[id].value <= _balances[redeemer]);
+    function confirmRedeem(address payable redeemer, uint256 id, bytes memory data) public {
+        // check if within number of blocks
+        bool block_valid = _verifyBlock(_redeemRequests[id].blocknumber);
+        bool tx_valid = _verifyTx(data);
 
-        bool result = _verifyTx(data);
+        if (block_valid && tx_valid) {
+            _balances[redeemer] -= _redeemRequests[id].value;
+            _totalSupply -= _redeemRequests[id].value;
+            // increase token amount of issuer that can be used for issuing
+            emit ConfirmRedeem(redeemer, id);
+        } else {
+            // bool result = _verifyTx(data);
 
-        _balances[redeemer] -= _redeemRequestMapping[id].value;
-        _totalSupply -= _redeemRequestMapping[id].value;
-        // increase token amount of issuer that can be used for issuing
-        emit ConfirmRedeem(redeemer, id);
-    }
+            _issuerCollateral -= _redeemRequests[id].value;
+            // restore balance
+            _balances[redeemer] += _redeemRequests[id].value;
 
-    function reimburse(address payable redeemer, uint256 id, bytes memory data) public {
-        require(_redeemRequestMapping[id].redeemTime < now);
-        require(msg.sender == _redeemRequestMapping[id].redeemer);
+            redeemer.transfer(_redeemRequests[id].value);
 
-        // bool result = _verifyTx(data);
-
-        _issuerCollateral -= _redeemRequestMapping[id].value;
-        _balances[redeemer] -= _redeemRequestMapping[id].value;
-
-        redeemer.transfer(_redeemRequestMapping[id].value);
-
-        emit Reimburse(redeemer, _issuer, _redeemRequestMapping[id].value);
+            emit Reimburse(redeemer, _issuer, _redeemRequests[id].value);
+        }
     }
 
     // ---------------------
@@ -364,6 +351,17 @@ contract Treasury is Treasury_Interface, ERC20 {
 
     function _verifyAddress(address receiver, bytes memory btcAddress, bytes memory data) private returns(bool verified) {
         return true;
+    }
+
+    function _verifyBlock(uint256 blocknumber) private returns(bool block_valid) {
+        if (
+            (blocknumber >= (block.number - _confirmations)) 
+            && (blocknumber <= (block.number + _contestationPeriod))
+        ) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     function _convertEthToBtc(uint256 eth) private view returns(uint256) {
