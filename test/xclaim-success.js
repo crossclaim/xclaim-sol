@@ -102,7 +102,7 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
             value: 100
         });
         // Check event is fired
-        eventFired(trade_tx, "Trade");
+        eventFired(trade_tx, "AcceptTrade");
         // trade_success_gas += trade_tx.receipt.gasUsed;
         // trade_success_txs += 1;
 
@@ -118,7 +118,7 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
 
     it("Redeem assets", async () => {
         // check if redeem event fired
-        let redeem_tx = await btc_erc.redeem(bob, amount, btc_tx, {
+        let redeem_tx = await btc_erc.requestRedeem(bob, amount, btc_tx, {
             from: relayer
         });
         eventFired(redeem_tx, "RequestRedeem");
@@ -136,7 +136,7 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
         }
 
         // check if redeem succeeded
-        let redeem_success_tx = await btc_erc.redeemConfirm(bob, redeemId, btc_tx, {
+        let redeem_success_tx = await btc_erc.confirmRedeem(bob, redeemId, btc_tx, {
             from: bob,
             gas: gas_limit
         });

@@ -1,9 +1,11 @@
 pragma solidity ^ 0.5 .0;
 
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../interfaces/Treasury_Interface.sol";
 import "../components/ERC20.sol";
 
 contract Treasury is Treasury_Interface, ERC20 {
+    using SafeMath for uint256;
 
     // #####################
     // CONTRACT VARIABLES
@@ -332,7 +334,7 @@ contract Treasury is Treasury_Interface, ERC20 {
 
     function _verifyTx(bytes memory data) private returns(bool verified) {
         // data from line 256 https://github.com/ethereum/btcrelay/blob/develop/test/test_btcrelay.py
-        bytes memory rawTx = "0x8c14f0db3df150123e6f3dbbf30f8b955a8249b62ac1d1ff16284aefa3d06d87";
+        bytes memory rawTx = data;
         uint256 txIndex = 0;
         uint256[] memory merkleSibling = new uint256[](2);
         merkleSibling[0] = uint256(sha256("0xfff2525b8931402dd09222c50775608f75787bd2b87e56995a7bdd30f79702c4"));
@@ -341,19 +343,20 @@ contract Treasury is Treasury_Interface, ERC20 {
 
         (bool success, bytes memory returnData) = _relayer.call(abi.encodeWithSignature("verifyTx(bytes, uint256, uint256[], uint256)", rawTx, txIndex, merkleSibling, blockHash));
 
+        bytes memory invalid_tx = hex"fe6c48bbfdc025670f4db0340650ba5a50f9307b091d9aaa19aa44291961c69f";
         // TODO: Implement this correctly, now for testing only
-        if (data.length == 0) {
+        if (keccak256(data) == keccak256(invalid_tx)) {
             return false;
         } else {
             return true;
         }
     }
 
-    function _verifyAddress(address receiver, bytes memory btcAddress, bytes memory data) private returns(bool verified) {
+    function _verifyAddress(address receiver, bytes memory btcAddress, bytes memory data) private pure returns(bool verified) {
         return true;
     }
 
-    function _verifyBlock(uint256 blocknumber) private returns(bool block_valid) {
+    function _verifyBlock(uint256 blocknumber) private view returns(bool block_valid) {
         if (
             (blocknumber >= (block.number - _confirmations)) 
             && (blocknumber <= (block.number + _contestationPeriod))

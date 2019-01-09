@@ -20,7 +20,7 @@ contract('FAIL: XCLAIM', async (accounts) => {
     let user_collateral = web3.utils.toWei(collateral_user, "ether");
 
     const btc_tx = web3.utils.hexToBytes("0x3a7bdf6d01f068841a99cce22852698df8428d07c68a32d867b112a4b24c8fe0");
-    const invalid_tx = web3.utils.hexToBytes("0x");
+    const invalid_tx = web3.utils.hexToBytes("0xfe6c48bbfdc025670f4db0340650ba5a50f9307b091d9aaa19aa44291961c69f");
 
     // gas limit
     const gas_limit = 6000000;
@@ -41,7 +41,6 @@ contract('FAIL: XCLAIM', async (accounts) => {
 
     it("Issue asset", async () => {
         let balance_alice, balance_bob, balance_carol;
-
         // check if issue event is fired
         let issue_register_col_tx = await btc_erc.registerIssue(amount, invalid_tx, {
             from: alice,
@@ -81,7 +80,7 @@ contract('FAIL: XCLAIM', async (accounts) => {
         });
         eventFired(fail3_issue_col_tx, "IssueToken");
 
-        let fail_redeem_tx = await btc_erc.redeem(alice, amount, btc_tx, {
+        let fail_redeem_tx = await btc_erc.requestRedeem(alice, amount, btc_tx, {
             from: relayer
         });
         eventFired(fail_redeem_tx, "RequestRedeem");
@@ -99,10 +98,10 @@ contract('FAIL: XCLAIM', async (accounts) => {
         }
 
         // wait for timeout
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // await new Promise(resolve => setTimeout(resolve, 2000));
 
         // fail redeem
-        let reimburse_tx = await btc_erc.reimburse(alice, redeemId, btc_tx, {
+        let reimburse_tx = await btc_erc.confirmRedeem(alice, redeemId, invalid_tx, {
             from: alice
         });
         eventFired(reimburse_tx, "Reimburse");
