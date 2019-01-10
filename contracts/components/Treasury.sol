@@ -100,18 +100,23 @@ contract Treasury is Treasury_Interface, ERC20 {
     // ---------------------
     // SETUP
     // ---------------------
-    function getEthtoBtcConversion() public returns(uint256) {
+    function getEthtoBtcConversion() public returns (uint256) {
         return _conversionRateBTCETH;
     }
 
-    function setEthtoBtcConversion(uint256 rate) public {
+    function setEthtoBtcConversion(uint256 rate) public returns (bool){
         // todo: require maximum fluctuation
         // todo: only from "trusted" oracles
+        require(rate > 0, "Set rate greater than 0");
+
         _conversionRateBTCETH = rate;
+
+        assert(_conversionRateBTCETH == rate);
+        return true;
     }
 
     // Vaults
-    function authorizeIssuer(address payable toRegister) public payable {
+    function authorizeIssuer(address payable toRegister) public payable returns (bool) {
         require(msg.value >= _minimumCollateralIssuer, "Collateral too low");
         require(_issuer == address(0), "Issuer already set");
 
@@ -122,9 +127,11 @@ contract Treasury is Treasury_Interface, ERC20 {
         _issuerReplace = false;
 
         emit AuthorizedIssuer(toRegister, msg.value);
+
+        return true;
     }
 
-    function revokeIssuer(address toUnlist) private {
+    function revokeIssuer(address toUnlist) private returns (bool) {
         require(msg.sender == _issuer, "Can only be invoked by current issuer");
 
         _issuer = address(0);
@@ -133,10 +140,12 @@ contract Treasury is Treasury_Interface, ERC20 {
         }
 
         emit RevokedIssuer(toUnlist);
+
+        return true;
     }
 
     // Relayers
-    function authorizeRelayer(address toRegister) public {
+    function authorizeRelayer(address toRegister) public returns (bool) {
         /* TODO: who authroizes this? 
         For now, this method is only available in the constructor */
         // Does the relayer need to provide collateral?
@@ -144,21 +153,25 @@ contract Treasury is Treasury_Interface, ERC20 {
         require(msg.sender != _relayer);
 
         _relayer = toRegister;
-        // btcRelay = BTCRelay(toRegister);
+
         emit AuthorizedRelayer(toRegister);
+
+        return true;
     }
 
-    function revokeRelayer(address toUnlist) public {
+    function revokeRelayer(address toUnlist) public returns (bool) {
         // TODO: who can do that?
         _relayer = address(0);
         // btcRelay = BTCRelay(address(0));
         emit RevokedRelayer(_relayer);
+
+        return true;
     }
 
     // ---------------------
     // ISSUE
     // ---------------------
-    function registerIssue(uint256 amount, bytes memory btcAddress) public payable {
+    function registerIssue(uint256 amount, bytes memory btcAddress) public payable returns (bool) {
         require(msg.value >= _minimumCollateralUser, "Collateral too small");
         require(_issuerTokenSupply > amount + _issuerCommitedTokens, "Not enough collateral provided by issuer");
 
@@ -169,9 +182,11 @@ contract Treasury is Treasury_Interface, ERC20 {
 
         // emit event
         emit RegisterIssue(msg.sender, amount, block.number);
+
+        return true;
     }
 
-    function issueToken(address receiver, uint256 amount, bytes memory data) public {
+    function issueToken(address receiver, uint256 amount, bytes memory data) public returns (bool) {
         require(_collateralCommits[receiver].collateral > 0, "Collateral too small");
 
         // check if within number of blocks
@@ -192,7 +207,8 @@ contract Treasury is Treasury_Interface, ERC20 {
             _collateralCommits[msg.sender].blocknumber = 0;
 
             emit IssueToken(msg.sender, receiver, amount, data);
-            return;
+
+            return true;
         } else {
             // abort issue
             _issuerCommitedTokens -= amount;
@@ -200,7 +216,8 @@ contract Treasury is Treasury_Interface, ERC20 {
             _collateralCommits[msg.sender].collateral = 0;
 
             emit AbortIssue(msg.sender, receiver, amount, data);
-            return;
+
+            return false;
         }
     }
 
@@ -213,7 +230,7 @@ contract Treasury is Treasury_Interface, ERC20 {
     // SWAP
     // ---------------------
 
-    function offerTrade(uint256 tokenAmount, uint256 ethAmount, address payable ethParty) public {
+    function offerTrade(uint256 tokenAmount, uint256 ethAmount, address payable ethParty) public returns (bool) {
         require(_balances[msg.sender] >= tokenAmount, "Insufficient balance");
 
         _balances[msg.sender] -= tokenAmount;
@@ -222,9 +239,11 @@ contract Treasury is Treasury_Interface, ERC20 {
         emit NewTradeOffer(_tradeId, msg.sender, tokenAmount, ethParty, ethAmount);
 
         _tradeId += 1;
+
+        return true;
     }
 
-    function acceptTrade(uint256 offerId) payable public {
+    function acceptTrade(uint256 offerId) payable public returns (bool) {
         /* Verify offer exists and the provided ether is enough */
         require(_trades[offerId].completed == false, "Trade completed");
         require(msg.value >= _trades[offerId].ethAmount, "Insufficient amount");
@@ -236,12 +255,14 @@ contract Treasury is Treasury_Interface, ERC20 {
         _trades[offerId].tokenParty.transfer(msg.value);
 
         emit AcceptTrade(offerId, _trades[offerId].tokenParty, _trades[offerId].tokenAmount, msg.sender, msg.value);
+
+        return true;
     }
 
     // ---------------------
     // REDEEM
     // ---------------------
-    function requestRedeem(address payable redeemer, uint256 amount, bytes memory data) public {
+    function requestRedeem(address payable redeemer, uint256 amount, bytes memory data) public returns (bool) {
         /* The redeemer must have enough tokens to burn */
         require(_balances[redeemer] >= amount);
 
@@ -252,10 +273,12 @@ contract Treasury is Treasury_Interface, ERC20 {
         _redeemRequests[_redeemRequestId] = RedeemRequest(redeemer, amount, (block.number + _confirmations));
 
         emit RequestRedeem(redeemer, msg.sender, amount, data, _redeemRequestId);
+
+        return true;
     }
 
     // TODO: make these two functions into one
-    function confirmRedeem(address payable redeemer, uint256 id, bytes memory data) public {
+    function confirmRedeem(address payable redeemer, uint256 id, bytes memory data) public returns (bool) {
         // check if within number of blocks
         bool block_valid = _verifyBlock(_redeemRequests[id].blocknumber);
         bool tx_valid = _verifyTx(data);
@@ -265,6 +288,8 @@ contract Treasury is Treasury_Interface, ERC20 {
             _totalSupply -= _redeemRequests[id].value;
             // increase token amount of issuer that can be used for issuing
             emit ConfirmRedeem(redeemer, id);
+
+            return true;
         } else {
             // bool result = _verifyTx(data);
 
@@ -275,13 +300,15 @@ contract Treasury is Treasury_Interface, ERC20 {
             redeemer.transfer(_redeemRequests[id].value);
 
             emit Reimburse(redeemer, _issuer, _redeemRequests[id].value);
+
+            return false;
         }
     }
 
     // ---------------------
     // REPLACE
     // ---------------------
-    function requestReplace() public {
+    function requestReplace() public returns (bool) {
         require(msg.sender == _issuer);
         require(!_issuerReplace);
 
@@ -289,9 +316,11 @@ contract Treasury is Treasury_Interface, ERC20 {
         _issuerReplaceTimelock = now + 1 seconds;
 
         emit RequestReplace(_issuer, _issuerCollateral, _issuerReplaceTimelock);
+
+        return true;
     }
 
-    function lockCol() public payable {
+    function lockCol() public payable returns (bool) {
         require(_issuerReplace, "Issuer did not request change");
         require(msg.sender != _issuer, "Needs to be replaced by a non-issuer");
         require(msg.value >= _issuerCollateral, "Collateral needs to be high enough");
@@ -299,9 +328,11 @@ contract Treasury is Treasury_Interface, ERC20 {
         _issuerCandidate = msg.sender;
 
         emit LockReplace(_issuerCandidate, msg.value);
+
+        return true;
     }
 
-    function replace(bytes memory data) public {
+    function replace(bytes memory data) public returns (bool) {
         require(_issuerReplace);
         require(msg.sender == _issuer);
         require(_issuerReplaceTimelock > now);
@@ -314,9 +345,11 @@ contract Treasury is Treasury_Interface, ERC20 {
         _issuer.transfer(_issuerCollateral);
 
         emit ExecuteReplace(_issuerCandidate, _issuerCollateral);
+
+        return true;
     }
 
-    function abortReplace() public {
+    function abortReplace() public returns (bool) {
         require(_issuerReplace);
         require(msg.sender == _issuerCandidate);
         require(_issuerReplaceTimelock < now);
@@ -326,6 +359,8 @@ contract Treasury is Treasury_Interface, ERC20 {
         _issuerCandidate.transfer(_issuerCollateral);
 
         emit AbortReplace(_issuerCandidate, _issuerCollateral);
+
+        return true;
     }
 
     // ---------------------

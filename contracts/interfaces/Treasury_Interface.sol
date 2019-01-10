@@ -24,15 +24,15 @@ contract Treasury_Interface {
     // ---------------------
     function getEthtoBtcConversion() public returns (uint256);
     
-    function setEthtoBtcConversion(uint256 rate) public;
+    function setEthtoBtcConversion(uint256 rate) public returns (bool);
 
-    function authorizeIssuer(address payable toRegister) public payable;
+    function authorizeIssuer(address payable toRegister) public payable returns (bool);
     
-    function revokeIssuer(address toUnlist) private;
+    function revokeIssuer(address toUnlist) private returns (bool);
 
-    function authorizeRelayer(address toRegister) public;
+    function authorizeRelayer(address toRegister) public returns (bool);
 
-    function revokeRelayer(address toUnlist) public;
+    function revokeRelayer(address toUnlist) public returns (bool);
 
     event AuthorizedIssuer(address indexed issuer, uint collateral);
 
@@ -46,9 +46,9 @@ contract Treasury_Interface {
     // ISSUE
     // ---------------------
 
-    function registerIssue(uint256 amount, bytes memory btcAddress) public payable; 
+    function registerIssue(uint256 amount, bytes memory btcAddress) public payable returns (bool); 
 
-    function issueToken(address receiver, uint256 amount, bytes memory data) public;
+    function issueToken(address receiver, uint256 amount, bytes memory data) public returns (bool);
 
     event RegisterIssue(address indexed sender, uint256 value, uint256 timelock);
 
@@ -59,9 +59,9 @@ contract Treasury_Interface {
     // ---------------------
     // SWAP
     // ---------------------
-    function offerTrade(uint256 tokenAmount, uint256 ethAmount, address payable ethParty) public;
+    function offerTrade(uint256 tokenAmount, uint256 ethAmount, address payable ethParty) public returns (bool);
 
-    function acceptTrade(uint256 offerId) payable public;
+    function acceptTrade(uint256 offerId) payable public returns (bool);
     
     event NewTradeOffer(uint256 id, address indexed tokenParty, uint256 tokenAmount, address indexed ethParty, uint256 ethAmount);
 
@@ -72,9 +72,9 @@ contract Treasury_Interface {
 
     // ---------------------
 
-    function requestRedeem(address payable redeemer, uint256 amount, bytes memory data) public;
+    function requestRedeem(address payable redeemer, uint256 amount, bytes memory data) public returns (bool);
 
-    function confirmRedeem(address payable redeemer, uint256 id, bytes memory data) public;
+    function confirmRedeem(address payable redeemer, uint256 id, bytes memory data) public returns (bool);
 
     event RequestRedeem(address indexed redeemer, address indexed issuer, uint value, bytes data, uint id);
 
@@ -85,13 +85,13 @@ contract Treasury_Interface {
     // ---------------------
     // REPLACE
     // ---------------------
-    function requestReplace() public;
+    function requestReplace() public returns (bool);
 
-    function lockCol() public payable;
+    function lockCol() public payable returns (bool);
 
-    function replace(bytes memory data) public;
+    function replace(bytes memory data) public returns (bool);
 
-    function abortReplace() public;
+    function abortReplace() public returns (bool);
 
     event RequestReplace(address indexed issuer, uint256 amount, uint256 timelock);
 
