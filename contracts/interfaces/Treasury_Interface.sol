@@ -27,19 +27,19 @@ contract Treasury_Interface {
     
     function setEthtoBtcConversion(uint256 rate) public returns (bool);
 
-    function authorizeVault(address payable toRegister) public payable returns (bool);
+    function registerVault(address payable toRegister) public payable returns (bool);
     
-    function revokeVault(uint256 id, address toUnlist) private returns (bool);
+    // function revokeVault(uint256 id, address toUnlist) private returns (bool);
 
-    function authorizeRelayer(address toRegister) public returns (bool);
+    function registerRelay(address toRegister) public returns (bool);
 
     function revokeRelayer(address toUnlist) public returns (bool);
 
-    event AuthorizedVault(address indexed vault, uint collateral, uint id);
+    event RegisterVault(address indexed vault, uint collateral, uint id);
 
-    event RevokedVault(uint id, address indexed vault);
+    // event RevokedVault(uint id, address indexed vault);
 
-    event AuthorizedRelayer(address indexed relayer);
+    event RegisteredRelayer(address indexed relayer);
 
     event RevokedRelayer(address indexed relayer);
 

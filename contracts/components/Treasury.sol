@@ -107,7 +107,8 @@ contract Treasury is Treasury_Interface, ERC20 {
         }
         return vaults;
     }
-
+    
+    // TODO: add this to helper functions
     function getVaultId(address vaultAddress) public view returns (uint256) {
         require(_vaultId > 0, "No vault registered");
 
@@ -137,7 +138,7 @@ contract Treasury is Treasury_Interface, ERC20 {
     }
 
     // Vaults
-    function authorizeVault(address payable toRegister) public payable returns (uint256 vaultId) {
+    function registerVault(address payable toRegister) public payable returns (uint256 vaultId) {
         require(msg.value >= _minimumCollateralIssuer, "Collateral too low");
 
         // register single vault
@@ -156,7 +157,7 @@ contract Treasury is Treasury_Interface, ERC20 {
         _vaultTokenSupply += _convertEthToBtc(msg.value);
         _vaultCollateral += msg.value;
 
-        emit AuthorizedVault(toRegister, msg.value, vaultId);
+        emit RegisterVault(toRegister, msg.value, vaultId);
 
         // increase vault id
         _vaultId++;
@@ -179,6 +180,7 @@ contract Treasury is Treasury_Interface, ERC20 {
     // }
 
     // Relayers
+    // TODO: registerRelay
     function authorizeRelayer(address toRegister) public returns (bool) {
         /* TODO: who authroizes this? 
         For now, this method is only available in the constructor */
@@ -193,6 +195,8 @@ contract Treasury is Treasury_Interface, ERC20 {
         return true;
     }
 
+    // make contract ownable and owner can change relay
+    // TODO: revokeRelay
     function revokeRelayer(address toUnlist) public returns (bool) {
         // TODO: who can do that?
         _relayer = address(0);
@@ -205,27 +209,36 @@ contract Treasury is Treasury_Interface, ERC20 {
     // ---------------------
     // ISSUE
     // ---------------------
-    function registerIssue(uint256 amount, address vault, bytes memory btcAddress) public payable returns (bool) {
+    // TODO: name function commit
+    function registerIssue(
+        uint256 amount, 
+        address vault, 
+        bytes memory btcAddress) 
+    public payable returns (bool) {
+        // TODO: include a nonce for a user and use address plus nonce as key for CollateralCommit mapping
+        // TODO: make required msg.value a multiple of minimumCollateral per token (amount * collateral)
         require(msg.value >= _minimumCollateralUser, "Collateral too small");
-        require(_vaultTokenSupply > amount + _vaultCommitedTokens, "Not enough collateral provided by vaults");
 
+        uint256 vaultId = getVaultId(vault);
+        // TODO: add method, that checks if time limit for issue tokens is up and then frees committed tokens by this issuer
+        require(_vaults[vaultId].tokenSupply >= amount + _vaults[vaultId].commitedTokens, "Not enough collateral provided by this single vault");
         // Update vault specifics
-        uint256 id = getVaultId(vault);
-
-        require(_vaults[id].tokenSupply >= amount + _vaults[id].commitedTokens, "Not enough collateral provided by this single vault");
-
-        _vaults[id].commitedTokens += amount;
+        _vaults[vaultId].commitedTokens += amount;
 
         // update overall details
         _vaultCommitedTokens += amount;
-        _collateralCommits[msg.sender] = CollateralCommit(id, block.number, amount, btcAddress);
+
+        // store commit to issue
+        _collateralCommits[msg.sender] = CollateralCommit(vaultId, block.number, amount, btcAddress);
 
         // emit event
+        // TODO: emit nonce
         emit RegisterIssue(msg.sender, amount, block.number);
 
         return true;
     }
 
+    // TODO: 
     function issueToken(address receiver, bytes memory data) public returns (bool) {
         require(_collateralCommits[receiver].collateral > 0, "Collateral too small");
 
