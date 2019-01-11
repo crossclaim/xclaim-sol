@@ -13,7 +13,7 @@ contract Treasury is Treasury_Interface, ERC20 {
 
     // vault
     struct Vault {
-        address vault;
+        address payable vault;
         uint256 tokenSupply;
         uint256 commitedTokens;
         uint256 collateral;
@@ -180,7 +180,6 @@ contract Treasury is Treasury_Interface, ERC20 {
     // }
 
     // Relayers
-    // TODO: registerRelay
     function registerRelay(address toRegister) public returns (bool) {
         /* TODO: who authroizes this? 
         For now, this method is only available in the constructor */
@@ -210,6 +209,7 @@ contract Treasury is Treasury_Interface, ERC20 {
     // ISSUE
     // ---------------------
     // TODO: name function commit
+    // TODO: add recepient and change msg.sender for recepient
     function registerIssue(
         uint256 amount, 
         address vault, 
@@ -235,50 +235,71 @@ contract Treasury is Treasury_Interface, ERC20 {
         // TODO: emit nonce
         emit RegisterIssue(msg.sender, amount, block.number);
 
+        /* TODO: create unique hash from 
+        (btc_address of vault, eth_address, nonce, contract_address)
+        hash is used against replay attacks
+        */
+
         return true;
     }
 
-    // TODO: 
     function issueToken(address receiver, bytes memory data) public returns (bool) {
+        // TODO: require that msg.sender == creator of commitment
         require(_collateralCommits[receiver].collateral > 0, "Collateral too small");
 
-        // check if within number of blocks
-        bool block_valid = _verifyBlock(_collateralCommits[receiver].blocknumber);
+        // check if within number of blocks on Ethereum
+        bool verify_not_expired = _verifyBlock(_collateralCommits[receiver].blocknumber);
 
         // BTCRelay verifyTx callback
+        // TODO: future give parameter for minimum number of confirmations
         bool tx_valid = _verifyTx(data);
 
-        // TODO: match btc and eth address
+        // TODO: check hash of (btc_address of vault, eth_address, nonce, contract_address)
+        // extract from OP_RETURN 
+
         bool address_valid = _verifyAddress(receiver, _collateralCommits[receiver].btcAddress, data);
+
+        // check value of transaction
+        bool value_valid = true;
+
+        // TODO: replay protection with nonce?
 
         uint256 id = _collateralCommits[msg.sender].vaultId;
         uint256 amount = _collateralCommits[msg.sender].amount;
 
-        if (block_valid && tx_valid && address_valid) {
+        if (verify_not_expired && tx_valid && address_valid) {
             
             _totalSupply += amount;
-            _vaults[id].tokenSupply += amount;
             // issue tokens
             _balances[receiver] += amount;
             // reset user issue
             _collateralCommits[msg.sender].collateral = 0;
             _collateralCommits[msg.sender].blocknumber = 0;
+            // TODO: send user collateral back
 
             emit IssueToken(msg.sender, receiver, amount, data);
 
             return true;
         } else {
+            // TODO: report back the errors
             // abort issues
             _vaultCommitedTokens -= amount;
-            _vaults[id].tokenSupply -= amount;
+            _vaults[id].commitedTokens -= amount;
             // slash user collateral
+            this_collateral = _collateralCommits[msg.sender].collateral;
             _collateralCommits[msg.sender].collateral = 0;
-
+            // TODO: what to do with slashed collateral?
+            // paper: send to vault
+            // _vaults[id].vault.transfer(this_collateral);
+            
             emit AbortIssue(msg.sender, receiver, amount, data);
 
             return false;
         }
     }
+
+    // TODO: declare function that vault calls to slash user 
+    // collateral in case user did not submit on time
 
     // ---------------------
     // TRANSFER
