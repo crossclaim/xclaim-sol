@@ -181,7 +181,7 @@ contract Treasury is Treasury_Interface, ERC20 {
 
     // Relayers
     // TODO: registerRelay
-    function authorizeRelayer(address toRegister) public returns (bool) {
+    function registerRelay(address toRegister) public returns (bool) {
         /* TODO: who authroizes this? 
         For now, this method is only available in the constructor */
         // Does the relayer need to provide collateral?
@@ -190,7 +190,7 @@ contract Treasury is Treasury_Interface, ERC20 {
 
         _relayer = toRegister;
 
-        emit AuthorizedRelayer(toRegister);
+        emit RegisteredRelayer(toRegister);
 
         return true;
     }
