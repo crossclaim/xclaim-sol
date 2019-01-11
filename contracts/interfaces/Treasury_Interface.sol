@@ -12,8 +12,9 @@ contract Treasury_Interface {
     // function name() public view returns (string memory);
     // function symbol() public view returns (string memory);
     // function granularity() public view returns (uint256);
-    function issuer() public view returns(address);
-    function relayer() public view returns (address);
+    function getVaults() public view returns(address[] memory vaults);
+    function getVaultId(address vaultAddress) public view returns (uint256);
+    function getRelayer() public view returns (address);
 
     // #####################
     // FUNCTIONS
@@ -26,17 +27,17 @@ contract Treasury_Interface {
     
     function setEthtoBtcConversion(uint256 rate) public returns (bool);
 
-    function authorizeIssuer(address payable toRegister) public payable returns (bool);
+    function authorizeVault(address payable toRegister) public payable returns (bool);
     
-    function revokeIssuer(address toUnlist) private returns (bool);
+    function revokeVault(uint256 id, address toUnlist) private returns (bool);
 
     function authorizeRelayer(address toRegister) public returns (bool);
 
     function revokeRelayer(address toUnlist) public returns (bool);
 
-    event AuthorizedIssuer(address indexed issuer, uint collateral);
+    event AuthorizedVault(address indexed vault, uint collateral, uint id);
 
-    event RevokedIssuer(address indexed issuer);
+    event RevokedVault(uint id, address indexed vault);
 
     event AuthorizedRelayer(address indexed relayer);
 
@@ -46,9 +47,9 @@ contract Treasury_Interface {
     // ISSUE
     // ---------------------
 
-    function registerIssue(uint256 amount, bytes memory btcAddress) public payable returns (bool); 
+    function registerIssue(uint256 amount, address vault, bytes memory btcAddress) public payable returns (bool); 
 
-    function issueToken(address receiver, uint256 amount, bytes memory data) public returns (bool);
+    function issueToken(address receiver, bytes memory data) public returns (bool);
 
     event RegisterIssue(address indexed sender, uint256 value, uint256 timelock);
 
