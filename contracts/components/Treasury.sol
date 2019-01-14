@@ -226,7 +226,10 @@ contract Treasury is Treasury_Interface, ERC20 {
 
         uint256 vaultId = _getVaultId(vault);
         // TODO: add method, that checks if time limit for issue tokens is up and then frees committed tokens by this issuer
-        require(_vaults[vaultId].tokenSupply >= amount + _vaults[vaultId].commitedTokens, "Not enough collateral provided by this single vault");
+        require(
+            _vaults[vaultId].tokenSupply >= amount + _vaults[vaultId].commitedTokens, 
+            "Not enough collateral provided by this single vault"
+        );
         // Update vault specifics
         _vaults[vaultId].commitedTokens += amount;
 
@@ -414,7 +417,7 @@ contract Treasury is Treasury_Interface, ERC20 {
     function reimburseRedeem(address payable redeemer, uint256 id) public returns (bool) {
         // TODO: verify that deadline has passed
         // TODO: only user can call reimburse
-        // TODO: watchtower functionality later as enhacement
+        // TODO: watchtower functionality later as enhancement
         _vaultCollateral -= _redeemRequests[id].amount;
         // restore balance
         _balances[redeemer] += _redeemRequests[id].amount;
@@ -427,6 +430,8 @@ contract Treasury is Treasury_Interface, ERC20 {
     // ---------------------
     // REPLACE
     // ---------------------
+    // TODO: request partial redeem as enhancement
+    // TODO: vault needs to provide collateral
     function requestReplace() public returns (bool) {
         require(_vaultIds[msg.sender] != 0, "Vault not registered");
         require(_vaults[_vaultIds[msg.sender]].replace == false, "Replace already requested");
@@ -439,11 +444,16 @@ contract Treasury is Treasury_Interface, ERC20 {
         return true;
     }
 
+    // TODO: get used collateral per vault
+    // TODO: block redeem requests, once lockReplace function is finished
+    // TODO: set period for redeem requests further into the future
+    // TODO: if there are still pending redeem requests, lock replace will revert
     function lockReplace(address vault) public payable returns (bool) {
         require(_vaults[_vaultIds[vault]].replace, "Vault did not request replace");
         require(msg.sender != vault, "Needs to be replaced by a a different vault");
         require(msg.value >= _vaults[_vaultIds[vault]].collateral, "Collateral needs to be high enough");
 
+        // TODO: track amount of new collateral provided to send it back to vault replacing the current
         _vaults[_vaultIds[vault]].replaceCandidate = msg.sender;
 
         emit LockReplace(msg.sender, msg.value);
@@ -459,12 +469,15 @@ contract Treasury is Treasury_Interface, ERC20 {
             "Replace did not occur within required time"
         );
 
+        // TODO: hash (eth_address of vault, contract address, nonce, btc return script)
         // verify that btc has been sent to the correct address
         bool result = _verifyTx(data);
 
         _vaults[_vaultIds[vault]].vault = _vaults[_vaultIds[vault]].replaceCandidate;
         _vaults[_vaultIds[vault]].replaceCandidate = address(0);
         _vaults[_vaultIds[vault]].replace = false;
+
+        // send surplus collateral to vault candidate
 
         // transfer collateral back to vault
         _vaults[_vaultIds[vault]].vault.transfer(_vaults[_vaultIds[vault]].collateral);
@@ -484,6 +497,8 @@ contract Treasury is Treasury_Interface, ERC20 {
 
         _vaults[_vaultIds[vault]].replace = false;
 
+        // TODO: slash collateral of issuer 
+        // TODO: return transaction fees of vault candidate
         _vaults[_vaultIds[vault]].replaceCandidate.transfer(_vaults[_vaultIds[vault]].collateral);
 
         emit AbortReplace(_vaults[_vaultIds[vault]].replaceCandidate, _vaults[_vaultIds[vault]].collateral);
