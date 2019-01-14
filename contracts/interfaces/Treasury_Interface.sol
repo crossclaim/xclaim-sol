@@ -73,9 +73,11 @@ contract Treasury_Interface {
 
     // ---------------------
 
-    function requestRedeem(address payable redeemer, uint256 amount, bytes memory data) public returns (bool);
+    function requestRedeem(address payable vault, address payable redeemer, uint256 amount, bytes memory data) public returns (bool);
 
-    function confirmRedeem(address payable redeemer, uint256 id, bytes memory data) public returns (bool);
+    function confirmRedeem(uint256 id, bytes memory data) public returns (bool);
+
+    function reimburseRedeem(uint256 id) public returns (bool);
 
     event RequestRedeem(address indexed redeemer, address indexed issuer, uint value, bytes data, uint id);
 

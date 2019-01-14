@@ -50,6 +50,9 @@ contract Treasury is Treasury_Interface, ERC20 {
         uint256 vaultId;
         uint256 blocknumber;
         uint256 collateral;
+        uint256 amount;
+        address receiver;
+        address payable sender;
         bytes btcAddress;
     }
     mapping(address => CollateralCommit) public _collateralCommits;
@@ -68,9 +71,11 @@ contract Treasury is Treasury_Interface, ERC20 {
 
     // redeem
     struct RedeemRequest {
+        address payable vault;
         address payable redeemer;
-        uint256 value;
+        uint256 amount;
         uint256 blocknumber;
+        bytes btcOutput;
     }
     mapping(uint => RedeemRequest) public _redeemRequests;
     uint256 public _redeemRequestId;
@@ -211,6 +216,7 @@ contract Treasury is Treasury_Interface, ERC20 {
     // TODO: name function commit
     // TODO: add recepient and change msg.sender for recepient
     function registerIssue(
+        address receiver,
         uint256 amount, 
         address vault, 
         bytes memory btcAddress) 
@@ -229,11 +235,19 @@ contract Treasury is Treasury_Interface, ERC20 {
         _vaultCommitedTokens += amount;
 
         // store commit to issue
-        _collateralCommits[msg.sender] = CollateralCommit(vaultId, block.number, amount, btcAddress);
+        _collateralCommits[receiver] = CollateralCommit({
+            vaultId: vaultId,
+            blocknumber: block.number,
+            collateral: msg.value,
+            amount: amount,
+            receiver: receiver,
+            sender: msg.sender,
+            btcAddress: btcAddress
+        });
 
         // emit event
         // TODO: emit nonce
-        emit RegisterIssue(msg.sender, amount, block.number);
+        emit RegisterIssue(receiver, amount, block.number);
 
         /* TODO: create unique hash from 
         (btc_address of vault, eth_address, nonce, contract_address)
@@ -244,7 +258,8 @@ contract Treasury is Treasury_Interface, ERC20 {
     }
 
     function issueToken(address receiver, bytes memory data) public returns (bool) {
-        // TODO: require that msg.sender == creator of commitment
+        // Require that msg.sender == creator of commitment
+        require(msg.sender == _collateralCommits[receiver].sender);
         require(_collateralCommits[receiver].collateral > 0, "Collateral too small");
 
         // check if within number of blocks on Ethereum
@@ -264,8 +279,9 @@ contract Treasury is Treasury_Interface, ERC20 {
 
         // TODO: replay protection with nonce?
 
-        uint256 id = _collateralCommits[msg.sender].vaultId;
-        uint256 amount = _collateralCommits[msg.sender].amount;
+        uint256 id = _collateralCommits[receiver].vaultId;
+        uint256 amount = _collateralCommits[receiver].amount;
+        uint256 collateral = _collateralCommits[receiver].collateral;
 
         if (verify_not_expired && tx_valid && address_valid) {
             
@@ -273,9 +289,10 @@ contract Treasury is Treasury_Interface, ERC20 {
             // issue tokens
             _balances[receiver] += amount;
             // reset user issue
-            _collateralCommits[msg.sender].collateral = 0;
-            _collateralCommits[msg.sender].blocknumber = 0;
-            // TODO: send user collateral back
+            _collateralCommits[receiver].collateral = 0;
+            _collateralCommits[receiver].blocknumber = 0;
+            // Send user collateral back
+            _collateralCommits[receiver].sender.transfer(collateral);
 
             emit IssueToken(msg.sender, receiver, amount, data);
 
@@ -286,11 +303,10 @@ contract Treasury is Treasury_Interface, ERC20 {
             _vaultCommitedTokens -= amount;
             _vaults[id].commitedTokens -= amount;
             // slash user collateral
-            this_collateral = _collateralCommits[msg.sender].collateral;
-            _collateralCommits[msg.sender].collateral = 0;
+            _collateralCommits[receiver].collateral = 0;
             // TODO: what to do with slashed collateral?
             // paper: send to vault
-            // _vaults[id].vault.transfer(this_collateral);
+            _vaults[id].vault.transfer(collateral);
             
             emit AbortIssue(msg.sender, receiver, amount, data);
 
@@ -342,47 +358,71 @@ contract Treasury is Treasury_Interface, ERC20 {
     // ---------------------
     // REDEEM
     // ---------------------
-    function requestRedeem(address payable redeemer, uint256 amount, bytes memory data) public returns (bool) {
+    // TODO: add vault for requesting redeem
+    // TODO: implement option to request maximum amount to redeem
+    function requestRedeem(address payable vault, address payable redeemer, uint256 amount, bytes memory btcOutput) public returns (bool) {
         /* The redeemer must have enough tokens to burn */
         require(_balances[redeemer] >= amount);
+        // TODO: require vault to have enough tokens
 
         // need to lock tokens
         _balances[redeemer] -= amount;
 
         _redeemRequestId++;
-        _redeemRequests[_redeemRequestId] = RedeemRequest(redeemer, amount, (block.number + _confirmations));
+        _redeemRequests[_redeemRequestId] = RedeemRequest({
+            vault: vault,
+            redeemer: redeemer, 
+            amount: amount, 
+            blocknumber: block.number,
+            btcOutput: btcOutput
+        });
 
-        emit RequestRedeem(redeemer, msg.sender, amount, data, _redeemRequestId);
+        // TODO: mapping of vault txs through hash
+        // hash(btc output script, eth_address_redeemer, redeem_request_id, contract_address)
+
+        // TODO: return hash in event
+        emit RequestRedeem(redeemer, msg.sender, amount, btcOutput, _redeemRequestId);
 
         return true;
     }
 
-    // TODO: make these two functions into one
-    function confirmRedeem(address payable redeemer, uint256 id, bytes memory data) public returns (bool) {
+    // TODO: verify hash of previous out
+    function confirmRedeem(uint256 id, bytes memory data) public returns (bool) {
+        // TODO: confirm redeem can only be called by vault
+
         // check if within number of blocks
         bool block_valid = _verifyBlock(_redeemRequests[id].blocknumber);
-        bool tx_valid = _verifyTx(data);
+        bool tx_valid = _verifyTx(data); // what parameters?
 
         if (block_valid && tx_valid) {
-            _balances[redeemer] -= _redeemRequests[id].value;
+            // _balances[redeemer] -= _redeemRequests[id].value;
             _totalSupply -= _redeemRequests[id].value;
+            // TODO: release collateral of vault if requested
+            // TODO: update available collateral
             // increase token amount of issuer that can be used for issuing
-            emit ConfirmRedeem(redeemer, id);
+            emit ConfirmRedeem(_redeemRequests[id].redeemer, id);
 
             return true;
         } else {
-            // bool result = _verifyTx(data);
+            // TODO: emit event that redeem failed, give vault time until deadline
 
-            _vaultCollateral -= _redeemRequests[id].value;
-            // restore balance
-            _balances[redeemer] += _redeemRequests[id].value;
-
-            redeemer.transfer(_redeemRequests[id].value);
-
-            emit Reimburse(redeemer, _issuer, _redeemRequests[id].value);
 
             return false;
         }
+    }
+
+    // TODO: split functions of confirm redeem and reimburse
+    function reimburseRedeem(address payable redeemer, uint256 id) public returns (bool) {
+        // TODO: verify that deadline has passed
+        // TODO: only user can call reimburse
+        // TODO: watchtower functionality later as enhacement
+        _vaultCollateral -= _redeemRequests[id].value;
+        // restore balance
+        _balances[redeemer] += _redeemRequests[id].value;
+
+        redeemer.transfer(_redeemRequests[id].value);
+
+        emit Reimburse(redeemer, _redeemRequests[id].vault, _redeemRequests[id].value);
     }
 
     // ---------------------
