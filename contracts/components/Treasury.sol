@@ -1,4 +1,4 @@
-pragma solidity ^ 0.5 .0;
+pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../interfaces/Treasury_Interface.sol";
@@ -17,9 +17,9 @@ contract Treasury is Treasury_Interface, ERC20 {
         uint256 tokenSupply;
         uint256 commitedTokens;
         uint256 collateral;
-        address replaceCandidate;
+        address payable replaceCandidate;
         bool replace;
-        uint256 replaceConfirmations;
+        uint256 blocknumber;
     }
     mapping(uint256 => Vault) _vaults;
     mapping(address => uint256) _vaultIds;
@@ -80,6 +80,9 @@ contract Treasury is Treasury_Interface, ERC20 {
     mapping(uint => RedeemRequest) public _redeemRequests;
     uint256 public _redeemRequestId;
 
+    // replace
+    uint256 _replacePeriod;
+
     constructor() public {
         _totalSupply = 0;
         // vault
@@ -99,25 +102,21 @@ contract Treasury is Treasury_Interface, ERC20 {
         // init id counters
         _tradeId = 0;
         _redeemRequestId = 0;
+
+        // replace
+        _replacePeriod = 20;
     }
 
     // #####################
     // FUNCTIONS
     // #####################
-
+    // TODO: return maximum numbers of tokens that can be issued as well
     function getVaults() public view returns(address[] memory vaults) {
         require(_vaultId > 0, "No vault registered");
         for (uint256 i=0; i <= _vaultId; i++) {
             vaults[i] = _vaults[i].vault;
         }
         return vaults;
-    }
-    
-    // TODO: add this to helper functions
-    function getVaultId(address vaultAddress) public view returns (uint256) {
-        require(_vaultId > 0, "No vault registered");
-
-        return _vaultIds[vaultAddress];
     }
 
     function getRelayer() public view returns(address) {
@@ -143,8 +142,11 @@ contract Treasury is Treasury_Interface, ERC20 {
     }
 
     // Vaults
-    function registerVault(address payable toRegister) public payable returns (uint256 vaultId) {
+    function registerVault(address payable toRegister) public payable returns (bool) {
         require(msg.value >= _minimumCollateralIssuer, "Collateral too low");
+
+        // increase vault id
+        _vaultId++;
 
         // register single vault
         _vaults[_vaultId] = Vault({
@@ -154,7 +156,7 @@ contract Treasury is Treasury_Interface, ERC20 {
             collateral: msg.value,
             replaceCandidate: address(0),
             replace: false,
-            replaceConfirmations: 0
+            blocknumber: 0
         });
         _vaultIds[toRegister] = _vaultId;
 
@@ -162,10 +164,7 @@ contract Treasury is Treasury_Interface, ERC20 {
         _vaultTokenSupply += _convertEthToBtc(msg.value);
         _vaultCollateral += msg.value;
 
-        emit RegisterVault(toRegister, msg.value, vaultId);
-
-        // increase vault id
-        _vaultId++;
+        emit RegisterVault(toRegister, msg.value, _vaultId);
 
         return true;
     }
@@ -225,7 +224,7 @@ contract Treasury is Treasury_Interface, ERC20 {
         // TODO: make required msg.value a multiple of minimumCollateral per token (amount * collateral)
         require(msg.value >= _minimumCollateralUser, "Collateral too small");
 
-        uint256 vaultId = getVaultId(vault);
+        uint256 vaultId = _getVaultId(vault);
         // TODO: add method, that checks if time limit for issue tokens is up and then frees committed tokens by this issuer
         require(_vaults[vaultId].tokenSupply >= amount + _vaults[vaultId].commitedTokens, "Not enough collateral provided by this single vault");
         // Update vault specifics
@@ -326,7 +325,7 @@ contract Treasury is Treasury_Interface, ERC20 {
     // SWAP
     // ---------------------
 
-    function offerTrade(uint256 tokenAmount, uint256 ethAmount, address payable ethParty) public returns (bool) {
+    function offerSwap(uint256 tokenAmount, uint256 ethAmount, address payable ethParty) public returns (bool) {
         require(_balances[msg.sender] >= tokenAmount, "Insufficient balance");
 
         _balances[msg.sender] -= tokenAmount;
@@ -339,7 +338,7 @@ contract Treasury is Treasury_Interface, ERC20 {
         return true;
     }
 
-    function acceptTrade(uint256 offerId) payable public returns (bool) {
+    function acceptSwap(uint256 offerId) payable public returns (bool) {
         /* Verify offer exists and the provided ether is enough */
         require(_trades[offerId].completed == false, "Trade completed");
         require(msg.value >= _trades[offerId].ethAmount, "Insufficient amount");
@@ -396,7 +395,7 @@ contract Treasury is Treasury_Interface, ERC20 {
 
         if (block_valid && tx_valid) {
             // _balances[redeemer] -= _redeemRequests[id].value;
-            _totalSupply -= _redeemRequests[id].value;
+            _totalSupply -= _redeemRequests[id].amount;
             // TODO: release collateral of vault if requested
             // TODO: update available collateral
             // increase token amount of issuer that can be used for issuing
@@ -416,69 +415,78 @@ contract Treasury is Treasury_Interface, ERC20 {
         // TODO: verify that deadline has passed
         // TODO: only user can call reimburse
         // TODO: watchtower functionality later as enhacement
-        _vaultCollateral -= _redeemRequests[id].value;
+        _vaultCollateral -= _redeemRequests[id].amount;
         // restore balance
-        _balances[redeemer] += _redeemRequests[id].value;
+        _balances[redeemer] += _redeemRequests[id].amount;
 
-        redeemer.transfer(_redeemRequests[id].value);
+        redeemer.transfer(_redeemRequests[id].amount);
 
-        emit Reimburse(redeemer, _redeemRequests[id].vault, _redeemRequests[id].value);
+        emit Reimburse(redeemer, _redeemRequests[id].vault, _redeemRequests[id].amount);
     }
 
     // ---------------------
     // REPLACE
     // ---------------------
     function requestReplace() public returns (bool) {
-        require(msg.sender == _issuer);
-        require(!_issuerReplace);
+        require(_vaultIds[msg.sender] != 0, "Vault not registered");
+        require(_vaults[_vaultIds[msg.sender]].replace == false, "Replace already requested");
 
-        _issuerReplace = true;
-        _issuerReplaceTimelock = now + 1 seconds;
+        _vaults[_vaultIds[msg.sender]].replace = true;
+        _vaults[_vaultIds[msg.sender]].blocknumber = block.number;
 
-        emit RequestReplace(_issuer, _vaultCollateral, _issuerReplaceTimelock);
-
-        return true;
-    }
-
-    function lockCol() public payable returns (bool) {
-        require(_issuerReplace, "Issuer did not request change");
-        require(msg.sender != _issuer, "Needs to be replaced by a non-issuer");
-        require(msg.value >= _vaultCollateral, "Collateral needs to be high enough");
-
-        _issuerCandidate = msg.sender;
-
-        emit LockReplace(_issuerCandidate, msg.value);
+        emit RequestReplace(msg.sender, _vaults[_vaultIds[msg.sender]].collateral, _vaults[_vaultIds[msg.sender]].blocknumber);
 
         return true;
     }
 
-    function replace(bytes memory data) public returns (bool) {
-        require(_issuerReplace);
-        require(msg.sender == _issuer);
-        require(_issuerReplaceTimelock > now);
+    function lockReplace(address vault) public payable returns (bool) {
+        require(_vaults[_vaultIds[vault]].replace, "Vault did not request replace");
+        require(msg.sender != vault, "Needs to be replaced by a a different vault");
+        require(msg.value >= _vaults[_vaultIds[vault]].collateral, "Collateral needs to be high enough");
 
+        _vaults[_vaultIds[vault]].replaceCandidate = msg.sender;
+
+        emit LockReplace(msg.sender, msg.value);
+
+        return true;
+    }
+
+    function confirmReplace(address vault, bytes memory data) public returns (bool) {
+        require(_vaults[_vaultIds[vault]].replace, "Vault did not request replace");
+        require(msg.sender == _vaults[_vaultIds[vault]].vault, "Needs to be confirmed by current vault");
+        require(
+            (_vaults[_vaultIds[vault]].blocknumber + _replacePeriod) >= block.number,
+            "Replace did not occur within required time"
+        );
+
+        // verify that btc has been sent to the correct address
         bool result = _verifyTx(data);
 
-        _issuer = _issuerCandidate;
-        _issuerCandidate = address(0);
-        _issuerReplace = false;
-        _issuer.transfer(_vaultCollateral);
+        _vaults[_vaultIds[vault]].vault = _vaults[_vaultIds[vault]].replaceCandidate;
+        _vaults[_vaultIds[vault]].replaceCandidate = address(0);
+        _vaults[_vaultIds[vault]].replace = false;
 
-        emit ExecuteReplace(_issuerCandidate, _vaultCollateral);
+        // transfer collateral back to vault
+        _vaults[_vaultIds[vault]].vault.transfer(_vaults[_vaultIds[vault]].collateral);
+
+        emit ConfirmReplace(_vaults[_vaultIds[vault]].replaceCandidate, _vaults[_vaultIds[vault]].collateral);
 
         return true;
     }
 
-    function abortReplace() public returns (bool) {
-        require(_issuerReplace);
-        require(msg.sender == _issuerCandidate);
-        require(_issuerReplaceTimelock < now);
+    function abortReplace(address vault) public returns (bool) {
+        require(_vaults[_vaultIds[vault]].replace, "Vault did not request replace");
+        require(msg.sender == _vaults[_vaultIds[vault]].replaceCandidate);
+        require(            
+            (_vaults[_vaultIds[vault]].blocknumber + _replacePeriod) <= block.number,
+            "Current vault can still confirm the replace within the period"
+        );
 
-        _issuerReplace = false;
+        _vaults[_vaultIds[vault]].replace = false;
 
-        _issuerCandidate.transfer(_vaultCollateral);
+        _vaults[_vaultIds[vault]].replaceCandidate.transfer(_vaults[_vaultIds[vault]].collateral);
 
-        emit AbortReplace(_issuerCandidate, _vaultCollateral);
+        emit AbortReplace(_vaults[_vaultIds[vault]].replaceCandidate, _vaults[_vaultIds[vault]].collateral);
 
         return true;
     }
@@ -486,6 +494,11 @@ contract Treasury is Treasury_Interface, ERC20 {
     // ---------------------
     // HELPERS
     // ---------------------
+    function _getVaultId(address vault) public view returns (uint256) {
+        require(_vaultId > 0, "No vault registered");
+
+        return _vaultIds[vault];
+    }
 
     function _verifyTx(bytes memory data) private returns(bool verified) {
         // data from line 256 https://github.com/ethereum/btcrelay/blob/develop/test/test_btcrelay.py
