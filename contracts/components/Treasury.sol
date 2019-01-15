@@ -218,7 +218,7 @@ contract Treasury is Treasury_Interface, ERC20 {
         address receiver,
         uint256 amount, 
         address vault, 
-        bytes memory btcAddress) 
+        bytes memory vaultBtcAddress) 
     public payable returns (bool) {
         // TODO: include a nonce for a user and use address plus nonce as key for CollateralCommit mapping
         // TODO: make required msg.value a multiple of minimumCollateral per token (amount * collateral)
@@ -244,7 +244,7 @@ contract Treasury is Treasury_Interface, ERC20 {
             amount: amount,
             receiver: receiver,
             sender: msg.sender,
-            btcAddress: btcAddress
+            btcAddress: vaultBtcAddress
         });
 
         // emit event
@@ -362,7 +362,7 @@ contract Treasury is Treasury_Interface, ERC20 {
     // ---------------------
     // TODO: add vault for requesting redeem
     // TODO: implement option to request maximum amount to redeem
-    function requestRedeem(address payable vault, address payable redeemer, uint256 amount, bytes memory btcOutput) public returns (bool) {
+    function requestRedeem(address payable vault, address payable redeemer, uint256 amount, bytes memory userBtcOutput) public returns (bool) {
         /* The redeemer must have enough tokens to burn */
         require(_balances[redeemer] >= amount);
         // TODO: require vault to have enough tokens
@@ -376,14 +376,14 @@ contract Treasury is Treasury_Interface, ERC20 {
             redeemer: redeemer, 
             amount: amount, 
             blocknumber: block.number,
-            btcOutput: btcOutput
+            btcOutput: userBtcOutput
         });
 
         // TODO: mapping of vault txs through hash
         // hash(btc output script, eth_address_redeemer, redeem_request_id, contract_address)
 
         // TODO: return hash in event
-        emit RequestRedeem(redeemer, msg.sender, amount, btcOutput, _redeemRequestId);
+        emit RequestRedeem(redeemer, msg.sender, amount, userBtcOutput, _redeemRequestId);
 
         return true;
     }

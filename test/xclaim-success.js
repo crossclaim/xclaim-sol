@@ -7,7 +7,7 @@ const XCLAIM = artifacts.require("./XCLAIM.sol");
 
 contract('SUCCESS: XCLAIM', async (accounts) => {
     /* For testing and experiments the following roles apply: */
-    const issuer = accounts[0];
+    const vault = accounts[0];
     const relayer = accounts[1];
     const alice = accounts[2];
     const bob = accounts[3];
@@ -18,6 +18,8 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
     const collateral_user = "0.00000001";
     let user_collateral = web3.utils.toWei(collateral_user, "ether");
 
+    const btc_address_vault = web3.utils.hexToBytes("0x02a751dc8c10e35fed2c6eddc2575c9af2c71d23");
+    const btc_address_bob = web3.utils.hexToBytes("0x69f374b39af4aa342997e0bdff3b3b297a85883c");
     const btc_tx = web3.utils.hexToBytes("0x3a7bdf6d01f068841a99cce22852698df8428d07c68a32d867b112a4b24c8fe0");
 
     // gas limit
@@ -30,18 +32,19 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
     it("Setup", async () => {
 
         // check if authorize event fired
-        let authorize_tx = await btc_erc.authorizeIssuer(issuer, {
-            from: issuer,
+        let authorize_tx = await btc_erc.registerVault(vault, {
+            from: vault,
             value: web3.utils.toWei(collateral, "ether")
         });
-        eventFired(authorize_tx, "AuthorizedIssuer");
+        eventFired(authorize_tx, "RegisterVault");
     })
+
 
     it("Issue asset", async () => {
         let balance_alice, balance_bob, balance_carol;
 
         // check if issue event is fired
-        let issue_register_col_tx = await btc_erc.registerIssue(amount, btc_tx, {
+        let issue_register_col_tx = await btc_erc.registerIssue(alice, amount, vault, btc_address_vault, {
             from: alice,
             value: user_collateral,
             gas: gas_limit
@@ -50,7 +53,7 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
         // issue_success_col_gas += issue_register_col_tx.receipt.gasUsed;
         // issue_success_col_txs += 1;
 
-        let issue_col_tx = await btc_erc.issueToken(alice, amount, btc_tx, {
+        let issue_col_tx = await btc_erc.issueToken(alice, btc_tx, {
             from: alice,
             gas: gas_limit
         });
@@ -80,7 +83,7 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
 
         // #### TRADE #####
         // Offer exchange of 1 token for 100 wei
-        let offer_tx = await btc_erc.offerTrade(1, 100, bob, {
+        let offer_tx = await btc_erc.offerSwap(1, 100, bob, {
             from: alice
         });
         // Check event is fired
@@ -97,7 +100,7 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
             }
         }
         // Complete the transfer
-        let trade_tx = await btc_erc.acceptTrade(offerId, {
+        let trade_tx = await btc_erc.acceptSwap(offerId, {
             from: bob,
             value: 100
         });
@@ -118,8 +121,8 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
 
     it("Redeem assets", async () => {
         // check if redeem event fired
-        let redeem_tx = await btc_erc.requestRedeem(bob, amount, btc_tx, {
-            from: relayer
+        let redeem_tx = await btc_erc.requestRedeem(vault, bob, amount, btc_address_bob, {
+            from: bob
         });
         eventFired(redeem_tx, "RequestRedeem");
         // redeem_success_gas += redeem_tx.receipt.gasUsed;
@@ -136,8 +139,8 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
         }
 
         // check if redeem succeeded
-        let redeem_success_tx = await btc_erc.confirmRedeem(bob, redeemId, btc_tx, {
-            from: bob,
+        let redeem_success_tx = await btc_erc.confirmRedeem(redeemId, btc_tx, {
+            from: vault,
             gas: gas_limit
         });
         eventFired(redeem_success_tx, "ConfirmRedeem");
@@ -145,17 +148,17 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
         // redeem_success_txs += 1;
     })
 
-    it("Replace issuer", async () => {
+    it("Replace vault", async () => {
         // request the replace
         let request_replace_success_tx = await btc_erc.requestReplace({
-            from: issuer
+            from: vault
         });
         eventFired(request_replace_success_tx, "RequestReplace");
         // replace_success_gas += request_replace_success_tx.receipt.gasUsed;
         // replace_success_txs += 1;
 
         // lock collateral
-        let lock_col_success_tx = await btc_erc.lockCol({
+        let lock_col_success_tx = await btc_erc.lockReplace(vault, {
             from: eve,
             value: web3.utils.toWei(collateral, "ether")
         });
@@ -164,11 +167,11 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
         // replace_success_txs += 1;
 
         // replace the issuer
-        let replace_success_tx = await btc_erc.replace(btc_tx, {
+        let replace_success_tx = await btc_erc.confirmReplace(vault, btc_tx, {
             from: issuer,
             gas: gas_limit
         });
-        eventFired(replace_success_tx, "ExecuteReplace");
+        eventFired(replace_success_tx, "ConfirmReplace");
         // replace_success_gas += replace_success_tx.receipt.gasUsed;
         // replace_success_txs += 1;
 
