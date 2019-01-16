@@ -17,7 +17,7 @@ contract XCLAIM is Treasury {
         _name = myname;
         _symbol = mysymbol;
         _granularity = mygranularity;
-        super.authorizeRelayer(relayer);
+        super.registerRelay(relayer);
     }
 
     function name() public view returns (string memory) {

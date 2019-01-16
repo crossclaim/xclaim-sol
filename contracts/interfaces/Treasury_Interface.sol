@@ -12,8 +12,10 @@ contract Treasury_Interface {
     // function name() public view returns (string memory);
     // function symbol() public view returns (string memory);
     // function granularity() public view returns (uint256);
-    function issuer() public view returns(address);
-    function relayer() public view returns (address);
+    function getVaults() public view returns(address[] memory vaults);
+    function getRelayer() public view returns (address);
+    function getVaultCollateral(address vault) public view returns (uint256);
+    function getReplacePeriod() public view returns (uint256);
 
     // #####################
     // FUNCTIONS
@@ -26,19 +28,17 @@ contract Treasury_Interface {
     
     function setEthtoBtcConversion(uint256 rate) public returns (bool);
 
-    function authorizeIssuer(address payable toRegister) public payable returns (bool);
+    function registerVault(address payable toRegister) public payable returns (bool);
     
-    function revokeIssuer(address toUnlist) private returns (bool);
+    // function revokeVault(uint256 id, address toUnlist) private returns (bool);
 
-    function authorizeRelayer(address toRegister) public returns (bool);
+    function registerRelay(address toRegister) public returns (bool);
 
     function revokeRelayer(address toUnlist) public returns (bool);
 
-    event AuthorizedIssuer(address indexed issuer, uint collateral);
+    event RegisterVault(address indexed vault, uint collateral, uint id);
 
-    event RevokedIssuer(address indexed issuer);
-
-    event AuthorizedRelayer(address indexed relayer);
+    event RegisteredRelayer(address indexed relayer);
 
     event RevokedRelayer(address indexed relayer);
 
@@ -46,9 +46,9 @@ contract Treasury_Interface {
     // ISSUE
     // ---------------------
 
-    function registerIssue(uint256 amount, bytes memory btcAddress) public payable returns (bool); 
+    function registerIssue(address receiver, uint256 amount, address vault, bytes memory btcAddress) public payable returns (bool); 
 
-    function issueToken(address receiver, uint256 amount, bytes memory data) public returns (bool);
+    function issueToken(address receiver, bytes memory data) public returns (bool);
 
     event RegisterIssue(address indexed sender, uint256 value, uint256 timelock);
 
@@ -59,9 +59,9 @@ contract Treasury_Interface {
     // ---------------------
     // SWAP
     // ---------------------
-    function offerTrade(uint256 tokenAmount, uint256 ethAmount, address payable ethParty) public returns (bool);
+    function offerSwap(uint256 tokenAmount, uint256 ethAmount, address payable ethParty) public returns (bool);
 
-    function acceptTrade(uint256 offerId) payable public returns (bool);
+    function acceptSwap(uint256 offerId) payable public returns (bool);
     
     event NewTradeOffer(uint256 id, address indexed tokenParty, uint256 tokenAmount, address indexed ethParty, uint256 ethAmount);
 
@@ -72,9 +72,11 @@ contract Treasury_Interface {
 
     // ---------------------
 
-    function requestRedeem(address payable redeemer, uint256 amount, bytes memory data) public returns (bool);
+    function requestRedeem(address payable vault, address payable redeemer, uint256 amount, bytes memory btcOutput) public returns (bool);
 
-    function confirmRedeem(address payable redeemer, uint256 id, bytes memory data) public returns (bool);
+    function confirmRedeem(uint256 id, bytes memory data) public returns (bool);
+
+    function reimburseRedeem(address payable redeemer, uint256 id) public returns (bool);
 
     event RequestRedeem(address indexed redeemer, address indexed issuer, uint value, bytes data, uint id);
 
@@ -87,17 +89,17 @@ contract Treasury_Interface {
     // ---------------------
     function requestReplace() public returns (bool);
 
-    function lockCol() public payable returns (bool);
+    function lockReplace(address vault) public payable returns (bool);
 
-    function replace(bytes memory data) public returns (bool);
+    function confirmReplace(address payable vault, bytes memory data) public returns (bool);
 
-    function abortReplace() public returns (bool);
+    function abortReplace(address vault) public returns (bool);
 
     event RequestReplace(address indexed issuer, uint256 amount, uint256 timelock);
 
     event LockReplace(address indexed candidate, uint256 amount);
 
-    event ExecuteReplace(address indexed new_issuer, uint256 amount);
+    event ConfirmReplace(address indexed new_issuer, uint256 amount);
 
     event AbortReplace(address indexed candidate, uint256 amount);
 }
