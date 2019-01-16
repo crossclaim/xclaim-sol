@@ -1,5 +1,6 @@
+const truffleAssert = require('truffle-assertions');
+
 var helpers = require('./helpers');
-var eventFired = helpers.eventFired;
 
 
 const XCLAIM = artifacts.require("./XCLAIM.sol");
@@ -16,6 +17,7 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
     const amount = 1;
     const collateral = "0.01";
     const collateral_user = "0.00000001";
+    let vault_collateral = web3.utils.toWei(collateral, "ether");
     let user_collateral = web3.utils.toWei(collateral_user, "ether");
 
     const btc_address_vault = web3.utils.hexToBytes("0x02a751dc8c10e35fed2c6eddc2575c9af2c71d23");
@@ -36,7 +38,7 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
             from: vault,
             value: web3.utils.toWei(collateral, "ether")
         });
-        eventFired(authorize_tx, "RegisterVault");
+        truffleAssert.eventEmitted(authorize_tx, "RegisterVault");
     })
 
 
@@ -49,7 +51,7 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
             value: user_collateral,
             gas: gas_limit
         });
-        eventFired(issue_register_col_tx, "RegisterIssue");
+        truffleAssert.eventEmitted(issue_register_col_tx, "RegisterIssue");
         // issue_success_col_gas += issue_register_col_tx.receipt.gasUsed;
         // issue_success_col_txs += 1;
 
@@ -57,7 +59,7 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
             from: alice,
             gas: gas_limit
         });
-        eventFired(issue_col_tx, "IssueToken");
+        truffleAssert.eventEmitted(issue_col_tx, "IssueToken");
         // issue_success_col_gas += issue_col_tx.receipt.gasUsed;
         // issue_success_col_txs += 1;
 
@@ -72,14 +74,14 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
         let transfer_one = await btc_erc.transfer(bob, 1, {
             from: alice
         });
-        eventFired(transfer_one, "Transfer");
+        truffleAssert.eventEmitted(transfer_one, "Transfer");
         // transfer_success_gas = transfer_one.receipt.gasUsed;
         // transfer_success_txs = 1;
 
         let transfer_two = await btc_erc.transfer(alice, 1, {
             from: bob
         });
-        eventFired(transfer_two, "Transfer");
+        truffleAssert.eventEmitted(transfer_two, "Transfer");
 
         // #### TRADE #####
         // Offer exchange of 1 token for 100 wei
@@ -87,7 +89,7 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
             from: alice
         });
         // Check event is fired
-        eventFired(offer_tx, "NewTradeOffer");
+        truffleAssert.eventEmitted(offer_tx, "NewTradeOffer");
         // trade_success_gas += offer_tx.receipt.gasUsed;
         // trade_success_txs += 1;
         /* Get offer id*/
@@ -105,7 +107,7 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
             value: 100
         });
         // Check event is fired
-        eventFired(trade_tx, "AcceptTrade");
+        truffleAssert.eventEmitted(trade_tx, "AcceptTrade");
         // trade_success_gas += trade_tx.receipt.gasUsed;
         // trade_success_txs += 1;
 
@@ -124,7 +126,7 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
         let redeem_tx = await btc_erc.requestRedeem(vault, bob, amount, btc_address_bob, {
             from: bob
         });
-        eventFired(redeem_tx, "RequestRedeem");
+        truffleAssert.eventEmitted(redeem_tx, "RequestRedeem");
         // redeem_success_gas += redeem_tx.receipt.gasUsed;
         // redeem_success_txs += 1;
 
@@ -143,7 +145,7 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
             from: vault,
             gas: gas_limit
         });
-        eventFired(redeem_success_tx, "ConfirmRedeem");
+        truffleAssert.eventEmitted(redeem_success_tx, "ConfirmRedeem");
         // redeem_success_gas += redeem_success_tx.receipt.gasUsed;
         // redeem_success_txs += 1;
     })
@@ -153,7 +155,7 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
         let request_replace_success_tx = await btc_erc.requestReplace({
             from: vault
         });
-        eventFired(request_replace_success_tx, "RequestReplace");
+        truffleAssert.eventEmitted(request_replace_success_tx, "RequestReplace");
         // replace_success_gas += request_replace_success_tx.receipt.gasUsed;
         // replace_success_txs += 1;
 
@@ -162,21 +164,24 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
             from: eve,
             value: web3.utils.toWei(collateral, "ether")
         });
-        eventFired(lock_col_success_tx, "LockReplace");
+        truffleAssert.eventEmitted(lock_col_success_tx, "LockReplace");
         // replace_success_gas += lock_col_success_tx.receipt.gasUsed;
         // replace_success_txs += 1;
 
         // replace the issuer
         let replace_success_tx = await btc_erc.confirmReplace(vault, btc_tx, {
-            from: issuer,
+            from: vault,
             gas: gas_limit
         });
-        eventFired(replace_success_tx, "ConfirmReplace");
+        truffleAssert.eventEmitted(replace_success_tx, "ConfirmReplace");
+        truffleAssert.eventEmitted(replace_success_tx, "RegisterVault");
         // replace_success_gas += replace_success_tx.receipt.gasUsed;
         // replace_success_txs += 1;
 
-        var current_issuer = await btc_erc.issuer.call();
-        assert.equal(current_issuer, eve, "SUCCESS: Did make Eve the issuer")
+        var current_vault_collateral = await btc_erc.getVaultCollateral.call(vault);
+        var eve_collateral = await btc_erc.getVaultCollateral.call(eve);
+        assert.equal(current_vault_collateral.toNumber(), 0, "FAIL: did not refund vault's collateral");
+        assert.equal(eve_collateral, vault_collateral, "FAIL: Refunded eve the collateral");
     })
 
 })

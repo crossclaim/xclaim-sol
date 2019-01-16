@@ -1,5 +1,7 @@
+const truffleAssert = require('truffle-assertions');
+
 var helpers = require('./helpers');
-var eventFired = helpers.eventFired;
+var generateBlocksGanache = helpers.generateBlocksGanache;
 
 
 const XCLAIM = artifacts.require("./XCLAIM.sol");
@@ -15,8 +17,9 @@ contract('FAIL: XCLAIM', async (accounts) => {
     const eve = accounts[5];
 
     const amount = 1;
-    const collateral = "0.01";
-    const collateral_user = "0.00000001";
+    const collateral = '0.01';
+    const collateral_user = '0.00000001';
+    let vault_collateral = web3.utils.toWei(collateral, "ether");
     let user_collateral = web3.utils.toWei(collateral_user, "ether");
 
     const btc_address_vault = web3.utils.hexToBytes("0x02a751dc8c10e35fed2c6eddc2575c9af2c71d23");
@@ -36,9 +39,9 @@ contract('FAIL: XCLAIM', async (accounts) => {
         // check if authorize event fired
         let authorize_tx = await btc_erc.registerVault(vault, {
             from: vault,
-            value: web3.utils.toWei(collateral, "ether")
+            value: vault_collateral
         });
-        eventFired(authorize_tx, "RegisterVault");
+        truffleAssert.eventEmitted(authorize_tx, 'RegisterVault');
     })
 
     it("Issue asset", async () => {
@@ -49,7 +52,7 @@ contract('FAIL: XCLAIM', async (accounts) => {
             value: user_collateral,
             gas: gas_limit
         });
-        eventFired(issue_register_col_tx, "RegisterIssue");
+        truffleAssert.eventEmitted(issue_register_col_tx, "RegisterIssue");
         // issue_fail_col_gas += fail_issue_register_col_tx.receipt.gasUsed;
         // issue_fail_col_txs += 1;
 
@@ -57,7 +60,7 @@ contract('FAIL: XCLAIM', async (accounts) => {
             from: alice,
             gas: gas_limit
         });
-        eventFired(fail_issue_col_tx, "AbortIssue");
+        truffleAssert.eventEmitted(fail_issue_col_tx, "AbortIssue");
         // issue_fail_col_gas += fail_issue_col_tx.receipt.gasUsed;
         // issue_fail_col_txs += 1;
 
@@ -75,19 +78,19 @@ contract('FAIL: XCLAIM', async (accounts) => {
             value: user_collateral,
             gas: gas_limit
         });
-        eventFired(fail3_issue_register_col_tx, "RegisterIssue");
+        truffleAssert.eventEmitted(fail3_issue_register_col_tx, "RegisterIssue");
 
 
         let fail3_issue_col_tx = await btc_erc.issueToken(alice, btc_tx, {
             from: alice,
             gas: gas_limit
         });
-        eventFired(fail3_issue_col_tx, "IssueToken");
+        truffleAssert.eventEmitted(fail3_issue_col_tx, "IssueToken");
 
         let fail_redeem_tx = await await btc_erc.requestRedeem(vault, alice, amount, btc_address_bob, {
             from: alice
         });
-        eventFired(fail_redeem_tx, "RequestRedeem");
+        truffleAssert.eventEmitted(fail_redeem_tx, "RequestRedeem");
         // redeem_fail_gas += fail_redeem_tx.receipt.gasUsed;
         // redeem_fail_txs += 1;
 
@@ -108,41 +111,45 @@ contract('FAIL: XCLAIM', async (accounts) => {
         let reimburse_tx = await btc_erc.reimburseRedeem(alice, redeemId, {
             from: alice
         });
-        eventFired(reimburse_tx, "Reimburse");
+        truffleAssert.eventEmitted(reimburse_tx, "Reimburse");
         // redeem_fail_gas += reimburse_tx.receipt.gasUsed;
         // redeem_fail_txs += 1;
     })
 
-    it("Replace issuer", async () => {
+    it("Replace vault", async () => {
         // request the replace
         let request_replace_fail_tx = await btc_erc.requestReplace({
             from: vault
         });
-        eventFired(request_replace_fail_tx, "RequestReplace");
+        truffleAssert.eventEmitted(request_replace_fail_tx, "RequestReplace");
         // replace_fail_gas += request_replace_fail_tx.receipt.gasUsed;
         // replace_fail_txs += 1;
 
         // lock collateral
         let lock_col_fail_tx = await btc_erc.lockReplace(vault, {
             from: eve,
-            value: web3.utils.toWei(collateral, "ether")
+            value: vault_collateral
         });
-        eventFired(lock_col_fail_tx, "LockReplace");
+        truffleAssert.eventEmitted(lock_col_fail_tx, "LockReplace");
         // replace_fail_gas += lock_col_fail_tx.receipt.gasUsed;
         // replace_fail_txs += 1;
 
-        // wait for timeout
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // wait for the replace eriod to pass
+        let replace_period = await btc_erc.getReplacePeriod.call();
+        await generateBlocksGanache(replace_period.toNumber());
+        // await new Promise(resolve => setTimeout(resolve, 2000));
 
         // replace abort
         let replace_fail_tx = await btc_erc.abortReplace(vault, {
             from: eve
         });
-        eventFired(replace_fail_tx, "AbortReplace");
+        truffleAssert.eventEmitted(replace_fail_tx, "AbortReplace");
         // replace_fail_gas += replace_fail_tx.receipt.gasUsed;
         // replace_fail_txs += 1;
 
-        var current_issuer = await btc_erc.issuer.call();
-        assert.equal(current_issuer, issuer, "FAIL: Made another person the issuer")
+        var current_vault_collateral = await btc_erc.getVaultCollateral.call(vault);
+        var eve_collateral = await btc_erc.getVaultCollateral.call(eve);
+        assert.equal(current_vault_collateral, vault_collateral, "FAIL: Refunded the vault the collateral");
+        assert.equal(eve_collateral.toNumber(), 0, "FAIL: did not refund Eve's collateral");
     })
 })

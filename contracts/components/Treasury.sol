@@ -123,6 +123,15 @@ contract Treasury is Treasury_Interface, ERC20 {
         return _relayer;
     }
 
+    function getVaultCollateral(address vault) public view returns (uint256) {
+        uint256 id = _vaultIds[vault];
+        return _vaults[id].collateral;
+    }
+
+    function getReplacePeriod() public view returns (uint256) {
+        return _replacePeriod;
+    }
+
     // ---------------------
     // SETUP
     // ---------------------
@@ -145,43 +154,14 @@ contract Treasury is Treasury_Interface, ERC20 {
     function registerVault(address payable toRegister) public payable returns (bool) {
         require(msg.value >= _minimumCollateralIssuer, "Collateral too low");
 
-        // increase vault id
-        _vaultId++;
-
-        // register single vault
-        _vaults[_vaultId] = Vault({
-            vault: toRegister,
-            tokenSupply:  _convertEthToBtc(msg.value),
-            commitedTokens: 0,
-            collateral: msg.value,
-            replaceCandidate: address(0),
-            replace: false,
-            blocknumber: 0
-        });
-        _vaultIds[toRegister] = _vaultId;
+        _registerNewVault(toRegister, msg.value);
 
         // increase amount that can be issued
         _vaultTokenSupply += _convertEthToBtc(msg.value);
         _vaultCollateral += msg.value;
 
-        emit RegisterVault(toRegister, msg.value, _vaultId);
-
         return true;
     }
-
-    // function revokeVault(uint256 id, address toUnlist) private returns (bool) {
-    //     require(msg.sender == _vaults[id].vault, "Can only be invoked by current issuer");
-    //     require(_vaults[id].commitedTokens == 0, "Vault is commited to tokens");
-
-    //     // _issuer = address(0);
-    //     if (_vaults[id].collateral > 0) {
-    //         _issuer.transfer(_vaults[id].collateral);
-    //     }
-
-    //     emit RevokedVault(id, toUnlist);
-
-    //     return true;
-    // }
 
     // Relayers
     function registerRelay(address toRegister) public returns (bool) {
@@ -451,7 +431,7 @@ contract Treasury is Treasury_Interface, ERC20 {
     function lockReplace(address vault) public payable returns (bool) {
         require(_vaults[_vaultIds[vault]].replace, "Vault did not request replace");
         require(msg.sender != vault, "Needs to be replaced by a a different vault");
-        require(msg.value >= _vaults[_vaultIds[vault]].collateral, "Collateral needs to be high enough");
+        require(msg.value == _vaults[_vaultIds[vault]].collateral, "Collateral needs to be high enough");
 
         // TODO: track amount of new collateral provided to send it back to vault replacing the current
         _vaults[_vaultIds[vault]].replaceCandidate = msg.sender;
@@ -461,7 +441,7 @@ contract Treasury is Treasury_Interface, ERC20 {
         return true;
     }
 
-    function confirmReplace(address vault, bytes memory data) public returns (bool) {
+    function confirmReplace(address payable vault, bytes memory data) public returns (bool) {
         require(_vaults[_vaultIds[vault]].replace, "Vault did not request replace");
         require(msg.sender == _vaults[_vaultIds[vault]].vault, "Needs to be confirmed by current vault");
         require(
@@ -473,14 +453,13 @@ contract Treasury is Treasury_Interface, ERC20 {
         // verify that btc has been sent to the correct address
         bool result = _verifyTx(data);
 
-        _vaults[_vaultIds[vault]].vault = _vaults[_vaultIds[vault]].replaceCandidate;
-        _vaults[_vaultIds[vault]].replaceCandidate = address(0);
-        _vaults[_vaultIds[vault]].replace = false;
-
+        _registerNewVault(_vaults[_vaultIds[vault]].replaceCandidate, _vaults[_vaultIds[vault]].collateral);
         // send surplus collateral to vault candidate
 
         // transfer collateral back to vault
-        _vaults[_vaultIds[vault]].vault.transfer(_vaults[_vaultIds[vault]].collateral);
+        uint256 returnCollateral = _vaults[_vaultIds[vault]].collateral;
+        _vaults[_vaultIds[vault]].collateral = 0;
+        vault.transfer(returnCollateral);
 
         emit ConfirmReplace(_vaults[_vaultIds[vault]].replaceCandidate, _vaults[_vaultIds[vault]].collateral);
 
@@ -509,10 +488,31 @@ contract Treasury is Treasury_Interface, ERC20 {
     // ---------------------
     // HELPERS
     // ---------------------
-    function _getVaultId(address vault) public view returns (uint256) {
+    function _getVaultId(address vault) private view returns (uint256) {
         require(_vaultId > 0, "No vault registered");
 
         return _vaultIds[vault];
+    }
+
+    function _registerNewVault(address payable toRegister, uint256 collateral) private returns (bool) {
+        // increase vault id
+        _vaultId++;
+
+        // register single vault
+        _vaults[_vaultId] = Vault({
+            vault: toRegister,
+            tokenSupply:  _convertEthToBtc(collateral),
+            commitedTokens: 0,
+            collateral: collateral,
+            replaceCandidate: address(0),
+            replace: false,
+            blocknumber: 0
+        });
+        _vaultIds[toRegister] = _vaultId;
+
+        emit RegisterVault(toRegister, collateral, _vaultId);
+
+        return true;
     }
 
     function _verifyTx(bytes memory data) private returns(bool verified) {
@@ -551,7 +551,7 @@ contract Treasury is Treasury_Interface, ERC20 {
     }
 
     function _convertEthToBtc(uint256 eth) private view returns(uint256) {
-        /* TODO use a contract that uses middleware to get the conversion rate */
+        /* TODO: use a contract that uses middleware to get the conversion rate */
         return eth * _conversionRateBTCETH;
     }
 }

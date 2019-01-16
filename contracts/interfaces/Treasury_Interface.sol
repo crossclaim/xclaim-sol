@@ -14,6 +14,8 @@ contract Treasury_Interface {
     // function granularity() public view returns (uint256);
     function getVaults() public view returns(address[] memory vaults);
     function getRelayer() public view returns (address);
+    function getVaultCollateral(address vault) public view returns (uint256);
+    function getReplacePeriod() public view returns (uint256);
 
     // #####################
     // FUNCTIONS
@@ -35,8 +37,6 @@ contract Treasury_Interface {
     function revokeRelayer(address toUnlist) public returns (bool);
 
     event RegisterVault(address indexed vault, uint collateral, uint id);
-
-    // event RevokedVault(uint id, address indexed vault);
 
     event RegisteredRelayer(address indexed relayer);
 
@@ -91,7 +91,7 @@ contract Treasury_Interface {
 
     function lockReplace(address vault) public payable returns (bool);
 
-    function confirmReplace(address vault, bytes memory data) public returns (bool);
+    function confirmReplace(address payable vault, bytes memory data) public returns (bool);
 
     function abortReplace(address vault) public returns (bool);
 
