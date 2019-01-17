@@ -9,7 +9,7 @@ XCLAIM introduces three main protocols to achieve decentralized, transparent, co
 + <b>Swap</b>: Swap Bitcoin-backed tokens on Ethereum with Ether.
 + <b>Redeem</b>: Burn Bitcoin-backed tokens on Ethereum and receive Bitcoins in return,
 
-The current XCLAIM prototype is compliant with the ERC20 standard. An overview of the protocol is presented below:
+The current XCLAIM prototype is compliant with the ERC20 standard. An overview of the protocols is presented below:
 
 ![overview of XCLAIM issue, swap and redeem protocols](https://github.com/crossclaim/crossclaim.github.io/blob/master/images/xclaim/xclaim-process.png)
 
@@ -21,10 +21,14 @@ XCLAIM guarantees that Bitcoin-backed tokens can be redeemed for the correspondi
 ## Paper
 Read more about XCLAIM in our <a href="https://eprint.iacr.org/2018/643.pdf">paper</a> (currently under submission).
 
-# Instructions
+
+## Detailed Protocol Overview and Components
+
+A concise overview is **coming soon**. 
+For now, please refer to the <a href="https://eprint.iacr.org/2018/643.pdf">paper</a>.
 
 
-## Install
+## Installation
 
 Make sure ganache-cli and truffle are installed as global packages. Then, install the required packages with:
 
@@ -32,7 +36,7 @@ Make sure ganache-cli and truffle are installed as global packages. Then, instal
 npm install
 ```
 
-## Test
+## Testing
 
 Start ganache:
 
@@ -43,19 +47,12 @@ ganache-cli
 Migrate contracts:
 
 ```
-truffle console
+truffle migrate
 ```
 
-From your truffle console:
+Run tests: 
 
 ```
-migrate
+truffle test
 ```
-
-From your truffle console:
-
-```
-test
-```
-
-Tests will execute locally.
+This will also re-run migration scripts. 
