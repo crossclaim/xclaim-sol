@@ -11,7 +11,7 @@ XCLAIM introduces three main protocols to achieve decentralized, transparent, co
 
 The current XCLAIM prototype is compliant with the ERC20 standard. An overview of the protocol is presented below:
 
-![overview of XCLAIM issue, swap and redeem protocols](https://raw.github.com/crossclaim/crossclaim.github.io/blob/master/images/xclaim/xclaim-process.png)
+![overview of XCLAIM issue, swap and redeem protocols](https://github.com/crossclaim/crossclaim.github.io/blob/master/images/xclaim/xclaim-process.png)
 
 XCLAIM guarantees that Bitcoin-backed tokens can be redeemed for the corresponding amount of Bitcoin, or the equivalent economic value in Ethereum. Thereby, XCLAIM overcomes the limitations of centralized approaches through three primary techniques:
 + <b>Secure audit logs</b>: Logs are constructed to record actions of all users both on Bitcoin and Ethereum.
