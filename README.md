@@ -1,5 +1,8 @@
 # XCLAIM(BTC,ETH)
 
+[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/xclaim-dev/community)
+
+
 **Disclaimer: this project is still under development and not safe to use!**
 
 ## Overview
