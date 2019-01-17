@@ -22,11 +22,15 @@ XCLAIM guarantees that Bitcoin-backed tokens can be redeemed for the correspondi
 Read more about XCLAIM in our <a href="https://eprint.iacr.org/2018/643.pdf">paper</a> (currently under submission).
 
 
-## Detailed Protocol Overview and Components
+## Protocol Summary and Components
 
 A concise overview is **coming soon**. 
 For now, please refer to the <a href="https://eprint.iacr.org/2018/643.pdf">paper</a>.
 
+
+## API 
+**Coming soon**. 
+For now, please refer to the <a href="https://eprint.iacr.org/2018/643.pdf">paper</a>.
 
 ## Installation
 
