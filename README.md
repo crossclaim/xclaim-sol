@@ -1,6 +1,6 @@
 # XCLAIM(BTC,ETH)
 
-** Disclaimer: this project is still under development and not safe to use!**
+**Disclaimer: this project is still under development and not safe to use!**
 
 ## Overview
 XCLAIM is a framework for achieving trustless and efficient cross-chain exchanges using cryptocurrency-backed assets (CbAs). XCLAIM allows to create assets which are 1:1 backed by existing cryptocurrencies, without requiring trust in a central operator. While this approach is applicable to a wide range of cryptocurrencies, we currently focus on implementing Bitcoin-backed tokens on Ethereum, i.e. <b>XCLAIM(BTC,ETH)</b>.
