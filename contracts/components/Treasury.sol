@@ -28,6 +28,9 @@ contract Treasury is Treasury_Interface, ERC20 {
     // CONTRACT VARIABLES
     // #####################
 
+    // global nonce
+    uint256 public _nonce;
+
     // vault
     struct Vault {
         address payable vault;
@@ -40,7 +43,6 @@ contract Treasury is Treasury_Interface, ERC20 {
     }
     mapping(uint256 => Vault) _vaults;
     mapping(address => uint256) _vaultIds;
-
     uint256 _vaultId;
 
     // sum of vaults
@@ -48,13 +50,11 @@ contract Treasury is Treasury_Interface, ERC20 {
     uint256 public _vaultCommitedTokens;
     uint256 public _vaultCollateral;
 
-    // relayer
-    address public _relayer;
+    // relay
+    address public _relay;
 
-    // block periods
+    // block confirmations
     uint256 public _confirmations;
-    uint256 public _contestationPeriod;
-    uint256 public _graceRedeemPeriod;
 
     // collateral
     uint256 public _minimumCollateralVault;
@@ -64,7 +64,7 @@ contract Treasury is Treasury_Interface, ERC20 {
     uint256 public _conversionRateBTCETH; // 10*5 granularity?
 
     // issue
-    struct CollateralCommit {
+    struct IssueRequest {
         uint256 vaultId;
         uint256 blocknumber;
         uint256 collateral;
@@ -73,7 +73,8 @@ contract Treasury is Treasury_Interface, ERC20 {
         address payable sender;
         bytes btcAddress;
     }
-    mapping(address => CollateralCommit) public _collateralCommits;
+    mapping(address => IssueRequest) public _issueRequests;
+    uint256 _issuePeriod;
 
     // swap
     struct Trade {
@@ -84,7 +85,7 @@ contract Treasury is Treasury_Interface, ERC20 {
         bool completed;
     }
     mapping(uint256 => Trade) public _trades;
-    uint256 public _tradeId; //todo: do we need this?
+    uint256 public _tradeId;
 
 
     // redeem
@@ -97,28 +98,42 @@ contract Treasury is Treasury_Interface, ERC20 {
     }
     mapping(uint => RedeemRequest) public _redeemRequests;
     uint256 public _redeemRequestId;
+    uint256 _redeemPeriod;
 
     // replace
     uint256 _replacePeriod;
 
     constructor() public {
+        // set initial nonce
+        _nonce = 0;
+
+        // set initial tokens
         _totalSupply = 0;
+
         // vault
         _vaultId = 0;
         _vaultTokenSupply = 0;
         _vaultCommitedTokens = 0;
         _vaultCollateral = 0;
-        // block
+
+        // block confirmations
         _confirmations = 12;
-        _contestationPeriod = 30;
-        _graceRedeemPeriod = 30;
+
         // collateral
         _minimumCollateralUser = 1 wei;
         _minimumCollateralVault = 1 wei;
+
         // conversion rate
         _conversionRateBTCETH = 2 * 10 ^ 5; // equals 1 BTC = 2 ETH
-        // init id counters
+
+        // issue
+        _issuePeriod = 20;
+
+        // swap
         _tradeId = 0;
+
+        // redeem
+        _redeemPeriod = 20;
         _redeemRequestId = 0;
 
         // replace
@@ -141,8 +156,8 @@ contract Treasury is Treasury_Interface, ERC20 {
         return vaults;
     }
 
-    function getRelayer() public view returns(address) {
-        return _relayer;
+    function getRelay() public view returns(address) {
+        return _relay;
     }
 
     function getVaultCollateral(address vault) public view returns (uint256) {
@@ -190,10 +205,10 @@ contract Treasury is Treasury_Interface, ERC20 {
         /* TODO: who authroizes this? 
         For now, this method is only available in the constructor */
         // Does the relayer need to provide collateral?
-        require(_relayer == address(0));
-        require(msg.sender != _relayer);
+        require(_relay == address(0));
+        require(msg.sender != _relay);
 
-        _relayer = toRegister;
+        _relay = toRegister;
 
         emit RegisteredRelayer(toRegister);
 
@@ -204,9 +219,9 @@ contract Treasury is Treasury_Interface, ERC20 {
     // TODO: revokeRelay
     function revokeRelayer(address toUnlist) public returns (bool) {
         // TODO: who can do that?
-        _relayer = address(0);
+        _relay = address(0);
         // btcRelay = BTCRelay(address(0));
-        emit RevokedRelayer(_relayer);
+        emit RevokedRelayer(_relay);
 
         return true;
     }
@@ -219,27 +234,25 @@ contract Treasury is Treasury_Interface, ERC20 {
     function registerIssue(
         address receiver,
         uint256 amount, 
-        address vault, 
+        address payable vault, 
         bytes memory vaultBtcAddress) 
     public payable returns (bool) {
-        // TODO: include a nonce for a user and use address plus nonce as key for CollateralCommit mapping
-        // TODO: make required msg.value a multiple of minimumCollateral per token (amount * collateral)
+        // TODO: include a nonce for a user and use address plus nonce as key for IssueRequest mapping
         require(msg.value >= (amount * _minimumCollateralUser), "Collateral too small");
 
         uint256 vaultId = _getVaultId(vault);
-        // TODO: add method, that checks if time limit for issue tokens is up and then frees committed tokens by this issuer
         require(
             _vaults[vaultId].tokenSupply >= amount + _vaults[vaultId].commitedTokens, 
             "Not enough collateral provided by this single vault"
         );
-        // Update vault specifics
+        // Update vault commited tokens
         _vaults[vaultId].commitedTokens += amount;
 
         // update overall details
         _vaultCommitedTokens += amount;
 
         // store commit to issue
-        _collateralCommits[receiver] = CollateralCommit({
+        _issueRequests[receiver] = IssueRequest({
             vaultId: vaultId,
             blocknumber: block.number,
             collateral: msg.value,
@@ -261,13 +274,19 @@ contract Treasury is Treasury_Interface, ERC20 {
         return true;
     }
 
-    function issueToken(address receiver, bytes memory data) public returns (bool) {
+    function confirmIssue(address receiver, bytes memory data) public returns (bool) {
         // Require that msg.sender == creator of commitment
-        require(msg.sender == _collateralCommits[receiver].sender);
-        require(_collateralCommits[receiver].collateral > 0, "Collateral too small");
+        require(msg.sender == _issueRequests[receiver].sender, "Different address sending request");
+        // Verify that collateral has not been revoked
+        require(_issueRequests[receiver].collateral > 0, "Collateral too small");
+        // Verify that issue request is performed within time
+        require(
+            _issueRequests[receiver].blocknumber + _issuePeriod >= block.number,
+            "Request to issue tokens not within time period"
+        );
 
         // check if within number of blocks on Ethereum
-        bool verify_not_expired = _verifyBlock(_collateralCommits[receiver].blocknumber);
+        bool verify_not_expired = _verifyBlock(_issueRequests[receiver].blocknumber);
 
         // BTCRelay verifyTx callback
         // TODO: future give parameter for minimum number of confirmations
@@ -276,16 +295,16 @@ contract Treasury is Treasury_Interface, ERC20 {
         // TODO: check hash of (btc_address of vault, eth_address, nonce, contract_address)
         // extract from OP_RETURN 
 
-        bool address_valid = _verifyAddress(receiver, _collateralCommits[receiver].btcAddress, data);
+        bool address_valid = _verifyAddress(receiver, _issueRequests[receiver].btcAddress, data);
 
         // check value of transaction
         bool value_valid = true;
 
         // TODO: replay protection with nonce?
 
-        uint256 id = _collateralCommits[receiver].vaultId;
-        uint256 amount = _collateralCommits[receiver].amount;
-        uint256 collateral = _collateralCommits[receiver].collateral;
+        uint256 id = _issueRequests[receiver].vaultId;
+        uint256 amount = _issueRequests[receiver].amount;
+        uint256 collateral = _issueRequests[receiver].collateral;
 
         if (verify_not_expired && tx_valid && address_valid) {
             
@@ -293,10 +312,10 @@ contract Treasury is Treasury_Interface, ERC20 {
             // issue tokens
             _balances[receiver] += amount;
             // reset user issue
-            _collateralCommits[receiver].collateral = 0;
-            _collateralCommits[receiver].blocknumber = 0;
+            _issueRequests[receiver].collateral = 0;
+            _issueRequests[receiver].blocknumber = 0;
             // Send user collateral back
-            _collateralCommits[receiver].sender.transfer(collateral);
+            _issueRequests[receiver].sender.transfer(collateral);
 
             emit IssueToken(msg.sender, receiver, amount, data);
 
@@ -307,12 +326,12 @@ contract Treasury is Treasury_Interface, ERC20 {
             _vaultCommitedTokens -= amount;
             _vaults[id].commitedTokens -= amount;
             // slash user collateral
-            _collateralCommits[receiver].collateral = 0;
+            _issueRequests[receiver].collateral = 0;
             // TODO: what to do with slashed collateral?
             // paper: send to vault
             _vaults[id].vault.transfer(collateral);
             
-            emit AbortIssue(msg.sender, receiver, amount, data);
+            emit AbortIssue(msg.sender, receiver, amount);
 
             return false;
         }
@@ -320,6 +339,30 @@ contract Treasury is Treasury_Interface, ERC20 {
 
     // TODO: declare function that vault calls to slash user 
     // collateral in case user did not submit on time
+    function abortIssue(address receiver) public returns (bool) {
+        // user collateral needs to be great than 0
+        require(_issueRequests[receiver].collateral > 0, "No collateral provided");
+        // this function can only be cault by the assigned vault
+        uint256 vaultId = _getVaultId(msg.sender);
+        require(vaultId == _issueRequests[receiver].vaultId, "Can only be called by the assigned vault");
+        // function can only be called after the deadline has passed
+        require(
+            _issueRequests[receiver].blocknumber + _issuePeriod <= block.number,
+            "Issue period has not yet passed"
+        );
+        
+        uint256 collateral = _issueRequests[receiver].collateral;
+
+        // slash user collateral
+        _issueRequests[receiver].collateral = 0;
+
+        msg.sender.transfer(collateral);
+
+        emit AbortIssue(msg.sender, receiver, _issueRequests[receiver].amount);
+        // assert(_issueRequests[receiver].collateral == 0); 
+
+        return true;   
+    }
 
     // ---------------------
     // TRANSFER
@@ -546,7 +589,7 @@ contract Treasury is Treasury_Interface, ERC20 {
         merkleSibling[1] = uint256(sha256("0x8e30899078ca1813be036a073bbf80b86cdddde1c96e9e9c99e9e3782df4ae49"));
         uint256 blockHash = uint256(sha256("0x0000000000009b958a82c10804bd667722799cc3b457bc061cd4b7779110cd60"));
 
-        (bool success, bytes memory returnData) = _relayer.call(abi.encodeWithSignature("verifyTx(bytes, uint256, uint256[], uint256)", rawTx, txIndex, merkleSibling, blockHash));
+        (bool success, bytes memory returnData) = _relay.call(abi.encodeWithSignature("verifyTx(bytes, uint256, uint256[], uint256)", rawTx, txIndex, merkleSibling, blockHash));
 
         bytes memory invalid_tx = hex"fe6c48bbfdc025670f4db0340650ba5a50f9307b091d9aaa19aa44291961c69f";
         // TODO: Implement this correctly, now for testing only
@@ -562,14 +605,7 @@ contract Treasury is Treasury_Interface, ERC20 {
     }
 
     function _verifyBlock(uint256 blocknumber) private view returns(bool block_valid) {
-        if (
-            (blocknumber >= (block.number - _confirmations)) 
-            && (blocknumber <= (block.number + _contestationPeriod))
-        ) {
-            return true;
-        } else {
-            return false;
-        }
+        return true;
     }
 
     function _convertEthToBtc(uint256 eth) private view returns(uint256) {

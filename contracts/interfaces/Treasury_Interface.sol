@@ -26,11 +26,8 @@ contract Treasury_Interface {
     // CONTRACT VARIABLES
     // #####################
 
-    // function name() public view returns (string memory);
-    // function symbol() public view returns (string memory);
-    // function granularity() public view returns (uint256);
-    function getVaults() public view returns(address[] memory vaults);
-    function getRelayer() public view returns (address);
+    function getVaults() public view returns(address[] memory);
+    function getRelay() public view returns (address);
     function getVaultCollateral(address vault) public view returns (uint256);
     function getReplacePeriod() public view returns (uint256);
 
@@ -63,15 +60,17 @@ contract Treasury_Interface {
     // ISSUE
     // ---------------------
 
-    function registerIssue(address receiver, uint256 amount, address vault, bytes memory btcAddress) public payable returns (bool); 
+    function registerIssue(address receiver, uint256 amount, address payable vault, bytes memory btcAddress) public payable returns (bool); 
 
-    function issueToken(address receiver, bytes memory data) public returns (bool);
+    function confirmIssue(address receiver, bytes memory data) public returns (bool);
+
+    function abortIssue(address receiver) public returns (bool);
 
     event RegisterIssue(address indexed sender, uint256 value, uint256 timelock);
 
     event IssueToken(address indexed issuer, address indexed receiver, uint value, bytes data);
 
-    event AbortIssue(address indexed issuer, address indexed receiver, uint value, bytes data);
+    event AbortIssue(address indexed issuer, address indexed receiver, uint value);
 
     // ---------------------
     // SWAP
