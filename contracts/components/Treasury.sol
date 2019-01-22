@@ -57,7 +57,7 @@ contract Treasury is Treasury_Interface, ERC20 {
     uint256 public _graceRedeemPeriod;
 
     // collateral
-    uint256 public _minimumCollateralIssuer;
+    uint256 public _minimumCollateralVault;
     uint256 public _minimumCollateralUser;
 
     // conversion rate
@@ -114,7 +114,7 @@ contract Treasury is Treasury_Interface, ERC20 {
         _graceRedeemPeriod = 30;
         // collateral
         _minimumCollateralUser = 1 wei;
-        _minimumCollateralIssuer = 1 wei;
+        _minimumCollateralVault = 1 wei;
         // conversion rate
         _conversionRateBTCETH = 2 * 10 ^ 5; // equals 1 BTC = 2 ETH
         // init id counters
@@ -174,7 +174,7 @@ contract Treasury is Treasury_Interface, ERC20 {
 
     // Vaults
     function registerVault(address payable toRegister) public payable returns (bool) {
-        require(msg.value >= _minimumCollateralIssuer, "Collateral too low");
+        require(msg.value >= _minimumCollateralVault, "Collateral too low");
 
         _registerNewVault(toRegister, msg.value);
 
@@ -224,7 +224,7 @@ contract Treasury is Treasury_Interface, ERC20 {
     public payable returns (bool) {
         // TODO: include a nonce for a user and use address plus nonce as key for CollateralCommit mapping
         // TODO: make required msg.value a multiple of minimumCollateral per token (amount * collateral)
-        require(msg.value >= _minimumCollateralUser, "Collateral too small");
+        require(msg.value >= (amount * _minimumCollateralUser), "Collateral too small");
 
         uint256 vaultId = _getVaultId(vault);
         // TODO: add method, that checks if time limit for issue tokens is up and then frees committed tokens by this issuer

@@ -55,7 +55,7 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
         // check if authorize event fired
         let authorize_tx = await btc_erc.registerVault(vault, {
             from: vault,
-            value: web3.utils.toWei(collateral, "ether")
+            value: vault_collateral
         });
         truffleAssert.eventEmitted(authorize_tx, "RegisterVault");
     })
