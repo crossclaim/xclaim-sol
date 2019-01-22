@@ -26,5 +26,15 @@ module.exports = {
   mocha: {
     enableTimeouts: false,
     useColors: true
+  },
+  compilers: {
+    solc: {
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 20
+        }
+      }
+    }
   }
 };

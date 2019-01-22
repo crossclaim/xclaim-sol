@@ -75,7 +75,7 @@ contract('FAIL: XCLAIM', async (accounts) => {
         // issue_fail_col_gas += fail_issue_register_col_tx.receipt.gasUsed;
         // issue_fail_col_txs += 1;
 
-        let fail_issue_col_tx = await btc_erc.issueToken(alice, invalid_tx, {
+        let fail_issue_col_tx = await btc_erc.confirmIssue(alice, invalid_tx, {
             from: alice,
             gas: gas_limit
         });
@@ -100,7 +100,7 @@ contract('FAIL: XCLAIM', async (accounts) => {
         truffleAssert.eventEmitted(fail3_issue_register_col_tx, "RegisterIssue");
 
 
-        let fail3_issue_col_tx = await btc_erc.issueToken(alice, btc_tx, {
+        let fail3_issue_col_tx = await btc_erc.confirmIssue(alice, btc_tx, {
             from: alice,
             gas: gas_limit
         });

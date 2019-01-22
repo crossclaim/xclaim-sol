@@ -55,7 +55,7 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
         // check if authorize event fired
         let authorize_tx = await btc_erc.registerVault(vault, {
             from: vault,
-            value: web3.utils.toWei(collateral, "ether")
+            value: vault_collateral
         });
         truffleAssert.eventEmitted(authorize_tx, "RegisterVault");
     })
@@ -74,7 +74,7 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
         // issue_success_col_gas += issue_register_col_tx.receipt.gasUsed;
         // issue_success_col_txs += 1;
 
-        let issue_col_tx = await btc_erc.issueToken(alice, btc_tx, {
+        let issue_col_tx = await btc_erc.confirmIssue(alice, btc_tx, {
             from: alice,
             gas: gas_limit
         });

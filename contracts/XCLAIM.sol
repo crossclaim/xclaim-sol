@@ -29,12 +29,12 @@ contract XCLAIM is Treasury {
         string memory myname, 
         string memory mysymbol, 
         uint256 mygranularity,
-        address relayer) 
+        address relay) 
         public {
         _name = myname;
         _symbol = mysymbol;
         _granularity = mygranularity;
-        super.registerRelay(relayer);
+        registerRelay(relay);
     }
 
     function name() public view returns (string memory) {

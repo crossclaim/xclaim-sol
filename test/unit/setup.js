@@ -24,10 +24,10 @@ var eventFired = helpers.eventFired;
 const XCLAIM = artifacts.require("./XCLAIM.sol");
 
 
-contract('SUCCESS: XCLAIM', async (accounts) => {
+contract('Setup XCLAIM contract', async (accounts) => {
     /* For testing and experiments the following roles apply: */
-    const issuer = accounts[0];
-    const relayer = accounts[1];
+    const vault = accounts[0];
+    const relay = accounts[1];
     const alice = accounts[2];
     const bob = accounts[3];
     const oracle = accounts[10];
@@ -62,5 +62,28 @@ contract('SUCCESS: XCLAIM', async (accounts) => {
             btc_erc.setEthtoBtcConversion(new_conversion_rate),
             "Set rate greater than 0"
         );
+    })
+
+    it("Verify that initillay no vault is registered", async function () {
+        await truffleAssert.reverts(
+            btc_erc.getVaults.call(),
+            "No vault registered"
+        );
+    })
+
+    it("Register vault", async () => {
+        await truffleAssert.reverts(
+            btc_erc.getVaults.call(),
+            "No vault registered"
+        );
+        // check if authorize event fired
+        let authorize_tx = await btc_erc.registerVault(vault, {
+            from: vault,
+            value: web3.utils.toWei(collateral, "ether")
+        });
+        truffleAssert.eventEmitted(authorize_tx, "RegisterVault");
+
+        let vaults = await btc_erc.getVaults.call();
+        assert.equal(vaults[0], vault, "did not make correct vault the vault");
     })
 })
