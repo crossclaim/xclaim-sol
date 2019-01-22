@@ -42,6 +42,7 @@ contract Treasury is Treasury_Interface, ERC20 {
     mapping(address => uint256) _vaultIds;
 
     uint256 _vaultId;
+
     // sum of vaults
     uint256 public _vaultTokenSupply;
     uint256 public _vaultCommitedTokens;
@@ -128,10 +129,14 @@ contract Treasury is Treasury_Interface, ERC20 {
     // FUNCTIONS
     // #####################
     // TODO: return maximum numbers of tokens that can be issued as well
-    function getVaults() public view returns(address[] memory vaults) {
+    function getVaults() public view returns(address[] memory) {
         require(_vaultId > 0, "No vault registered");
-        for (uint256 i=0; i <= _vaultId; i++) {
-            vaults[i] = _vaults[i].vault;
+
+        address[] memory vaults = new address[](_vaultId);
+
+        // NOTE: vaults are stored from id 1 and greater
+        for (uint i=0; i < _vaultId; i++) {
+            vaults[i] = _vaults[i+1].vault;
         }
         return vaults;
     }
