@@ -20,7 +20,7 @@ The current XCLAIM prototype is compliant with the ERC20 standard. An overview o
 
 XCLAIM guarantees that Bitcoin-backed tokens can be redeemed for the corresponding amount of Bitcoin, or the equivalent economic value in Ethereum. Thereby, XCLAIM overcomes the limitations of centralized approaches through three primary techniques:
 + <b>Secure audit logs</b>: Logs are constructed to record actions of all users both on Bitcoin and Ethereum.
-+ <b>Transaction inclusion proofs</b>: (Chain relays)[https://github.com/crossclaim/btcrelay-sol] are used to prove correct behavior on Bitcoin to the smart contract on Ethereum.
++ <b>Transaction inclusion proofs</b>: [Chain relays](https://github.com/crossclaim/btcrelay-sol) are used to prove correct behavior on Bitcoin to the smart contract on Ethereum.
 + <b>Over-collateralization</b>: Incentivize honest behavior following a proof-or-punishment approach. All involved parties must actively prove correct behaviour to the smart contract, e.g. by providing inclusion proofs for Bitcoin transactions.
 
 ## Paper
