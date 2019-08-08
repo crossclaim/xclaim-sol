@@ -27,8 +27,11 @@ contract Treasury_Interface {
     // #####################
 
     function getVaults() public view returns(address[] memory);
+
     function getRelay() public view returns (address);
+
     function getVaultCollateral(address vault) public view returns (uint256);
+
     function getReplacePeriod() public view returns (uint256);
 
     // #####################
@@ -36,15 +39,21 @@ contract Treasury_Interface {
     // #####################
 
     // ---------------------
-    // SETUP
+    // PRICE ORACLE
     // ---------------------
-    function getEthtoBtcConversion() public returns (uint256);
+    function getConversionRate() public returns (uint256);
     
-    function setEthtoBtcConversion(uint256 rate) public returns (bool);
+    function setConversionRate(uint256 rate) public returns (bool);
+
+    // ---------------------
+    // VAULT
+    // ---------------------
 
     function registerVault(address payable toRegister) public payable returns (bool);
     
-    // function revokeVault(uint256 id, address toUnlist) private returns (bool);
+    // ---------------------
+    // RELAY
+    // ---------------------
 
     function registerRelay(address toRegister) public returns (bool);
 

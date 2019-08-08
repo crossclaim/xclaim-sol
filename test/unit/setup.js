@@ -47,11 +47,13 @@ contract('Setup XCLAIM contract', async (accounts) => {
     it("Adjust BTC/ETH conversion rate", async function () {
         const new_conversion_rate = "3";
 
-        let conversion_rate = await btc_erc.getEthtoBtcConversion.call({from: oracle});
-        await btc_erc.setEthtoBtcConversion(new_conversion_rate);
+        let conversion_rate = await btc_erc.getConversionRate.call({from: oracle});
+        await btc_erc.setConversionRate(new_conversion_rate);
         assert.notEqual(conversion_rate,new_conversion_rate, "Did not update the conversion rate");
         
-        let updated_conversion_rate = await btc_erc.getEthtoBtcConversion.call({from: oracle});
+        let updated_conversion_rate = await btc_erc.getConversionRate.call({
+            from: oracle
+        });
         assert.equal(updated_conversion_rate,new_conversion_rate, "Updated the conversion rate to wrong value");
     })
 
@@ -59,7 +61,7 @@ contract('Setup XCLAIM contract', async (accounts) => {
         const new_conversion_rate = "0";
 
         await truffleAssert.reverts(
-            btc_erc.setEthtoBtcConversion(new_conversion_rate),
+            btc_erc.setConversionRate(new_conversion_rate),
             "Set rate greater than 0"
         );
     })

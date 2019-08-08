@@ -33,22 +33,22 @@ contract Treasury is Treasury_Interface, ERC20 {
 
     // vault
     struct Vault {
-        address payable vault;
-        uint256 tokenSupply;
-        uint256 commitedTokens;
-        uint256 collateral;
-        address payable replaceCandidate;
-        bool replace;
-        uint256 blocknumber;
+        address payable vault; // address of vault
+        uint256 tokenSupply; // maximum token supply of vault (backed-tokens)
+        uint256 committedTokens; // number of tokens committed to all CbA requesters
+        uint256 collateral; // amount of provided collateral
+        address payable replaceCandidate; // address of replacement vault
+        bool replace; // marked for replacement
+        uint256 blocknumber; // replace period as number of blocks
     }
     mapping(uint256 => Vault) _vaults;
     mapping(address => uint256) _vaultIds;
     uint256 _vaultId;
 
     // sum of vaults
-    uint256 public _vaultTokenSupply;
-    uint256 public _vaultCommitedTokens;
-    uint256 public _vaultCollateral;
+    uint256 public _vaultTokenSupply; // total supply of CbA
+    uint256 public _vaultCommittedTokens; // total commited tokens to all CbA requesters
+    uint256 public _vaultCollateral; // total amount of collateral provided
 
     // relay
     address public _relay;
@@ -61,16 +61,16 @@ contract Treasury is Treasury_Interface, ERC20 {
     uint256 public _minimumCollateralUser;
 
     // conversion rate
-    uint256 public _conversionRateBTCETH; // 10*5 granularity?
+    uint256 public _conversionRate; // 10*5 granularity?
 
     // issue
     struct IssueRequest {
-        uint256 vaultId;
-        uint256 blocknumber;
-        uint256 collateral;
-        uint256 amount;
-        address receiver;
-        address payable sender;
+        uint256 vaultId; // selected vault
+        uint256 blocknumber; // block number when issue is requested
+        uint256 collateral; // amount of collateral provided by requester
+        uint256 amount; // amount of tokens to be issued
+        address receiver; // ETH address of requester
+        address payable sender; // 
         bytes btcAddress;
     }
     mapping(address => IssueRequest) public _issueRequests;
@@ -113,7 +113,7 @@ contract Treasury is Treasury_Interface, ERC20 {
         // vault
         _vaultId = 0;
         _vaultTokenSupply = 0;
-        _vaultCommitedTokens = 0;
+        _vaultCommittedTokens = 0;
         _vaultCollateral = 0;
 
         // block confirmations
@@ -124,7 +124,7 @@ contract Treasury is Treasury_Interface, ERC20 {
         _minimumCollateralVault = 1 wei;
 
         // conversion rate
-        _conversionRateBTCETH = 2 * 10 ^ 5; // equals 1 BTC = 2 ETH
+        _conversionRate = 2 * 10 ^ 5; // equals 1 BTC = 2 ETH
 
         // issue
         _issuePeriod = 20;
@@ -150,9 +150,10 @@ contract Treasury is Treasury_Interface, ERC20 {
         address[] memory vaults = new address[](_vaultId);
 
         // NOTE: vaults are stored from id 1 and greater
-        for (uint i=0; i < _vaultId; i++) {
+        for (uint i = 0; i < _vaultId; i++) {
             vaults[i] = _vaults[i+1].vault;
         }
+
         return vaults;
     }
 
@@ -170,24 +171,27 @@ contract Treasury is Treasury_Interface, ERC20 {
     }
 
     // ---------------------
-    // SETUP
+    // PRICE ORACLE
     // ---------------------
-    function getEthtoBtcConversion() public returns (uint256) {
-        return _conversionRateBTCETH;
+    function getConversionRate() public returns (uint256) {
+        return _conversionRate;
     }
 
-    function setEthtoBtcConversion(uint256 rate) public returns (bool){
+    function setConversionRate(uint256 rate) public returns (bool){
         // todo: require maximum fluctuation
         // todo: only from "trusted" oracles
         require(rate > 0, "Set rate greater than 0");
 
-        _conversionRateBTCETH = rate;
+        _conversionRate = rate;
 
-        assert(_conversionRateBTCETH == rate);
+        assert(_conversionRate == rate);
         return true;
     }
 
-    // Vaults
+    // ---------------------
+    // VAULT
+    // ---------------------
+
     function registerVault(address payable toRegister) public payable returns (bool) {
         require(msg.value >= _minimumCollateralVault, "Collateral too low");
 
@@ -200,7 +204,10 @@ contract Treasury is Treasury_Interface, ERC20 {
         return true;
     }
 
-    // Relayers
+    // ---------------------
+    // RELAY
+    // ---------------------
+
     function registerRelay(address toRegister) public returns (bool) {
         /* TODO: who authroizes this? 
         For now, this method is only available in the constructor */
@@ -242,14 +249,14 @@ contract Treasury is Treasury_Interface, ERC20 {
 
         uint256 vaultId = _getVaultId(vault);
         require(
-            _vaults[vaultId].tokenSupply >= amount + _vaults[vaultId].commitedTokens, 
+            _vaults[vaultId].tokenSupply >= amount + _vaults[vaultId].committedTokens, 
             "Not enough collateral provided by this single vault"
         );
         // Update vault commited tokens
-        _vaults[vaultId].commitedTokens += amount;
+        _vaults[vaultId].committedTokens += amount;
 
         // update overall details
-        _vaultCommitedTokens += amount;
+        _vaultCommittedTokens += amount;
 
         // store commit to issue
         _issueRequests[receiver] = IssueRequest({
@@ -323,8 +330,8 @@ contract Treasury is Treasury_Interface, ERC20 {
         } else {
             // TODO: report back the errors
             // abort issues
-            _vaultCommitedTokens -= amount;
-            _vaults[id].commitedTokens -= amount;
+            _vaultCommittedTokens -= amount;
+            _vaults[id].committedTokens -= amount;
             // slash user collateral
             _issueRequests[receiver].collateral = 0;
             // TODO: what to do with slashed collateral?
@@ -342,7 +349,7 @@ contract Treasury is Treasury_Interface, ERC20 {
     function abortIssue(address receiver) public returns (bool) {
         // user collateral needs to be great than 0
         require(_issueRequests[receiver].collateral > 0, "No collateral provided");
-        // this function can only be cault by the assigned vault
+        // this function can only be called by the assigned vault
         uint256 vaultId = _getVaultId(msg.sender);
         require(vaultId == _issueRequests[receiver].vaultId, "Can only be called by the assigned vault");
         // function can only be called after the deadline has passed
@@ -567,7 +574,7 @@ contract Treasury is Treasury_Interface, ERC20 {
         _vaults[_vaultId] = Vault({
             vault: toRegister,
             tokenSupply:  _convertEthToBtc(collateral),
-            commitedTokens: 0,
+            committedTokens: 0,
             collateral: collateral,
             replaceCandidate: address(0),
             replace: false,
@@ -610,6 +617,6 @@ contract Treasury is Treasury_Interface, ERC20 {
 
     function _convertEthToBtc(uint256 eth) private view returns(uint256) {
         /* TODO: use a contract that uses middleware to get the conversion rate */
-        return eth * _conversionRateBTCETH;
+        return eth * _conversionRate;
     }
 }
